@@ -7,5 +7,18 @@
     "default:Banner 1.jpg",
     "default:Banner 2.jpg"
   ],
-  "quick": null
+  "quick": [
+    {
+      "label": "TELEGRAM",
+      "url": ""
+    },
+    {
+      "label": "Join Group",
+      "url": ""
+    },
+    {
+      "label": "YouTube",
+      "url": ""
+    }
+  ]
 }
