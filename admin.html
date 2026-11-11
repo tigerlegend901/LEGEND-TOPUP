@@ -242,6 +242,76 @@ main.sm{max-width:520px;padding:0}
 .g2 .lb{margin-top:0!important}
 .rl-row .ta{min-height:72px;background:#fff}
 .bn-row{background:#f6f9ff}
+
+
+/* ===== TIGER TOPUP premium admin skin (visual-only; app logic unchanged) ===== */
+:root{
+  --admin-bg:#07090f;--admin-panel:#10131c;--admin-panel-2:#151a25;
+  --admin-border:rgba(255,255,255,.09);--admin-red:#ff2638;--admin-red2:#b90d20;
+  --admin-blue:#168cff;--admin-text:#f4f6fb;--admin-muted:#9ba6ba;
+  --admin-glow:0 0 24px rgba(255,30,55,.16);
+}
+body{background:var(--admin-bg);color:var(--admin-text)}
+#login{background:radial-gradient(ellipse at 50% 10%,rgba(255,30,55,.16),transparent 45%),radial-gradient(ellipse at 90% 90%,rgba(22,140,255,.10),transparent 40%),#07090f}
+.lg-card{max-width:410px;padding:34px 28px;background:linear-gradient(160deg,#171b27,#0d1018 72%);border:1px solid rgba(255,48,65,.38);border-radius:26px;box-shadow:0 0 0 1px rgba(255,255,255,.025),0 28px 80px rgba(0,0,0,.58),0 0 38px rgba(255,25,48,.13);text-align:left;position:relative;overflow:hidden}
+.lg-card:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#ff2638,#ff7a28,#168cff)}
+.lg-ic{width:68px;height:68px;border-radius:20px;margin:0 0 20px;background:linear-gradient(135deg,#ff3446,#a90018);box-shadow:0 10px 30px rgba(255,30,55,.32),inset 0 1px rgba(255,255,255,.25)}
+.lg-card h1{color:#fff;font-size:24px;letter-spacing:-.7px}
+.lg-card p.sub{color:#9ba6ba;margin:7px 0 24px}
+.inp,.ta{background:#0b0e15;color:#f4f6fb;border-color:#303747}
+.inp::placeholder,.ta::placeholder{color:#68758b}
+.inp:focus,.ta:focus{border-color:var(--admin-red);box-shadow:0 0 0 3px rgba(255,38,56,.15)}
+.pw button{color:#9ba6ba}
+.btn{background:linear-gradient(135deg,#ff3446,#bd1025);color:#fff;box-shadow:0 9px 24px -12px rgba(255,30,55,.9),inset 0 1px rgba(255,255,255,.18)}
+.btn.ghost{background:#171c28;color:#e9edf6;border-color:#343d50;box-shadow:none}
+.btn.danger{background:rgba(255,38,56,.09);color:#ff6572;border-color:rgba(255,80,95,.35);box-shadow:none}
+#app{min-height:100vh;background:radial-gradient(ellipse at 85% 0%,rgba(255,38,56,.09),transparent 32%),#07090f}
+#main{position:relative}
+#main.sm{max-width:1100px;padding:22px 22px 110px}
+.fab{left:22px;bottom:22px;width:54px;height:54px;border:1px solid rgba(255,76,91,.55);background:linear-gradient(145deg,#ff3446,#a90b20);color:#fff;box-shadow:0 8px 28px rgba(255,24,48,.32),0 0 0 5px rgba(255,38,56,.07)}
+.fab svg{width:22px;height:22px}
+.ov{background:rgba(0,0,0,.76);backdrop-filter:blur(8px)}
+.sheet{background:#0d111a;color:#f4f6fb;border:1px solid rgba(255,255,255,.10);border-bottom:0;box-shadow:0 -18px 60px rgba(0,0,0,.5)}
+.sh-h{background:#111722;border-color:#293244;color:#fff}
+.sh-h::before{background:#4a5365}
+.sh-b{background:#0b0f17;color:#f4f6fb}
+.sh-b .card,.sc{background:#121824;border-color:#2b3445;box-shadow:0 12px 28px rgba(0,0,0,.22)}
+.sc-h,.sh-b .card h2{border-color:#30394a;color:#fff}
+.sc-t small,.sh-b .d,.sh-b .lb,.lb{color:#a7b1c3}
+.sc-ic{background:linear-gradient(135deg,#ff3446,#a80d20);box-shadow:0 8px 18px rgba(255,38,56,.22)}
+.sc.danger{background:#1b1118;border-color:#71303a}
+.sh-b .inp,.sh-b .ta{background:#0b1019;border-color:#343e50;color:#f4f6fb}
+.sh-b .inp:focus,.sh-b .ta:focus{background:#101724;border-color:#ff3446}
+.pk-row,.rl-row,.bn-row{background:#0e1420;border-color:#30394a}
+.pk-row .inp,.rl-row .ta{background:#090e17;border-color:#343e50;color:#f4f6fb}
+.rowhd{border-color:#30394a}
+.rowhd b{color:#f4f6fb}
+.rn{background:rgba(255,38,56,.14);color:#ff7581}
+.ib{background:#151c29;border-color:#354055;color:#c2cada}
+.ib.del{background:rgba(255,38,56,.08);border-color:rgba(255,80,95,.35);color:#ff6876}
+.drop{background:#111a28;border-color:#47536a;color:#ff6876}
+.drop small{color:#9ba6ba}
+.prev{background:#0b111d;border-color:#4a5365}
+.note.info{background:#111b2b;border-color:#244c78;color:#8fc7ff}
+#toast{background:#171d29;border:1px solid rgba(255,255,255,.12);box-shadow:0 14px 36px rgba(0,0,0,.4)}
+#toast.ok{background:#0d2a20;color:#8df0bd;border-color:#176044}
+#toast.bad{background:#35141b;color:#ff9aa4;border-color:#74303b}
+#gh{box-shadow:0 16px 40px rgba(0,0,0,.5)}
+
+/* The website canvas remains a faithful preview; only the admin controls use the new skin. */
+@media(min-width:760px){
+  #main.sm{padding-top:28px}
+  .fab{left:28px;bottom:28px}
+  .sheet{border-radius:24px 24px 0 0}
+}
+@media(max-width:560px){
+  #main.sm{padding:12px 12px 100px}
+  .lg-card{padding:28px 22px}
+  .fab{left:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px)}
+  .sh-b{padding:12px 12px 30px}
+  .s-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
 </style>
 </head>
 <body>
