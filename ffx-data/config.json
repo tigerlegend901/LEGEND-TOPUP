@@ -24,15 +24,12 @@
     "pop": "img-pop-1794396800326.png"
   },
   "prod": {
-    "uc": {
-      "name": "UID CHECKER"
-    },
     "uid": {
       "packages": [
         {
           "label": "WEEKLY",
           "name": "WEEKLY",
-          "price": 158
+          "price": 155
         },
         {
           "label": "MONTHLY",
@@ -100,6 +97,9 @@
           "price": 6440
         }
       ]
+    },
+    "uc": {
+      "name": "UID CHECKER"
     }
   },
   "texts": {
