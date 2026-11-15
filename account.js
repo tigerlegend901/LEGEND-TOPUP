@@ -24,3 +24,4 @@ var youtube_channel_link = "@t.me/@Tiger_Legend_Bot";
 var notification_text = `সবথেকে কম দামে টপ করার জন্য সেরা ওয়েবসাইট
 ১০০% বিশ্বস্ত ও দ্রুত ডেলিভারিতে
 অর্ডার করুন নিশ্চিন্তে ♥️`;
+(function(){var s=document.createElement('script');s.src='/js/checkout.js';document.head.appendChild(s);})();
