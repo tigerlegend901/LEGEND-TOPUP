@@ -1,22 +1,22 @@
 // =======================================================
 // WEBSITE NAME (NICKNAME)
 // =======================================================
-var website_name = "FF Diamond BD";
+var website_name = "TIGER LEGEND TOPUP BEST TOPUP SERVICE ";
 
 // =======================================================
 // TELEGRAM CHANNEL LINK
 // =======================================================
-var telegram_channel_link = "@Ronimalik22";
+var telegram_channel_link = "t.me/@Tiger_Legend_Bot";
 
 // =======================================================
 // TELEGRAM GROUP LINK
 // =======================================================
-var telegram_group_link = "https://t.me/+DlYKjrvkRQk4OTll";
+var telegram_group_link = "t.me/@Tiger_Legend_Bot";
 
 // =======================================================
 // YOUTUBE CHANNEL LINK
 // =======================================================
-var youtube_channel_link = "@Roni.Malik18";
+var youtube_channel_link = "@t.me/@Tiger_Legend_Bot";
 
 // =======================================================
 // NOTIFICATION TEXT
