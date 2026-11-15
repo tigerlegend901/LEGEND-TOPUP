@@ -29,8 +29,7 @@
         {
           "label": "WEEKLY",
           "name": "WEEKLY",
-          "price": 155,
-          "stockOut": true
+          "price": 155
         },
         {
           "label": "MONTHLY",
