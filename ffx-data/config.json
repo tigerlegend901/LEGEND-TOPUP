@@ -98,9 +98,6 @@
         }
       ]
     },
-    "uc": {
-      "name": "UID CHECKER"
-    },
     "wm": {
       "packages": [
         {
@@ -139,9 +136,15 @@
           "price": 1235
         }
       ]
+    },
+    "uc": {
+      "name": "UID CHECKER"
     }
   },
   "texts": {
-    "pop": "‼️ THIS WEBSITE IS UNDER MAINTENANCE  WAIT FOR COMPLETE‼️"
-  }
+    "pop": "‼️ THIS WEBSITE IS UNDER MAINTENANCE  WAIT FOR COMPLETE‼️",
+    "notice": "HELLO EVERYONE"
+  },
+  "custom": null,
+  "hideNp": false
 }
