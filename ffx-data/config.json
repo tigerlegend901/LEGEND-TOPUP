@@ -25,6 +25,7 @@
   },
   "prod": {
     "uid": {
+      "name": "UID TOPUP (BD)",
       "packages": [
         {
           "label": "WEEKLY",
