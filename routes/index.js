@@ -31,6 +31,14 @@ module.exports = function createApi(deps) {
   const ctxBase = { deps, HttpError, limit, crypto, M: () => M, paymentInfo };
 
   async function handle(req, res, pathname) {
+    if (pathname === '/api/sms-webhook' && req.method === 'POST') {
+      try { await require('../services/smsHook').handle({ req, res, deps, connect: async () => { if (!uri) throw new HttpError(503, 'MONGODB_URI is not set'); await connect(); }, getModels: () => M }); }
+      catch (e) {
+        if (e && e.expose) deps.sendJson(res, e.status, { error: e.message });
+        else { console.error('sms-webhook error', e && e.message); deps.sendJson(res, 500, { error: 'Server error' }); }
+      }
+      return true;
+    }
     const isUser = pathname === '/api/orders' || pathname.startsWith('/api/orders/') || pathname.startsWith('/api/wallet/');
     const isAdminR = pathname.startsWith('/api/admin/orders') || pathname.startsWith('/api/admin/addmoney') || pathname.startsWith('/api/admin/codes') || pathname.startsWith('/api/admin/users') || pathname.startsWith('/api/admin/payment');
     if (!isUser && !isAdminR) return false;
