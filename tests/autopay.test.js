@@ -12,7 +12,7 @@ function coll(unique) {
   const hit = (d, q) => Object.entries(q).every(([k, v]) => {
     if (v && typeof v === 'object' && !(v instanceof Date)) {
       if ('$gte' in v) return d[k] >= v.$gte;
-      if ('$in' in v) return v.$in.some((x) => eq(x, d[k]));
+      if ('$in' in v) return v.$in.some((x) => (x === null ? d[k] == null : eq(x, d[k])));
       if ('$ne' in v) return !eq(v.$ne, d[k]);
     }
     return eq(d[k], v) || (v === null && d[k] == null);
@@ -23,7 +23,8 @@ function coll(unique) {
     rows,
     async create(o) {
       if (unique && rows.some((r) => r[unique] === o[unique])) { const e = new Error('dup'); e.code = 11000; throw e; }
-      const d = { _id: hex(), ...o }; rows.push(d); return { ...d };
+      const d = { _id: hex(), ...o }; rows.push(d); const out = { ...d };
+      Object.defineProperty(out, 'save', { enumerable: false, value: async () => { Object.assign(d, out); } }); return out;
     },
     findOne: (f) => q(rows.find((r) => hit(r, f))),
     findById: (id) => q(rows.find((r) => eq(r._id, id))),
@@ -156,6 +157,89 @@ let n = 0; const ok = (name) => console.log('✓', name, ++n);
   assert.strictEqual(both.filter(Boolean).length, 0); // আগেই হয়ে গেছে, আর কিছু হবে না
   assert.strictEqual(M.Order.rows.filter((o) => o.trxId === '11HHHHHH11' && o.paid).length, 1);
   ok('no double settle');
+
+  // ================= ক্যানসেল =================
+  // ---- কেস ৯: ইউজার instant অর্ডার বাতিল করলে → Cancelled, TrxID ছাড়া হয়, পরে SMS এলেও পেইড হয় না
+  r = await order('310 Diamond', 255, 'bkash', '01788888888', '77CANCEL77', user2);
+  assert.strictEqual(r.code, 200); const cid1 = r.obj.order._id;
+  let c1 = await call(orders, 'POST', '/api/orders/' + cid1 + '/cancel', {}, user2);
+  assert.strictEqual(c1.code, 200); assert.strictEqual(c1.obj.cancelled, true);
+  st = await call(orders, 'GET', '/api/orders/' + cid1, undefined, user2);
+  assert.strictEqual(st.obj.cancelled, true); assert.strictEqual(st.obj.rejected, true); assert.strictEqual(st.obj.paid, false);
+  r = await hook(BK('255.00', '01788888888', '77CANCEL77')); assert.strictEqual(r.obj.matched, null);
+  assert.strictEqual(M.Order.rows.find((o) => o._id === cid1).paid, false);
+  assert.strictEqual(M.UsedTrx.rows.some((x) => x.trxId === '77CANCEL77'), false); // TrxID মুক্ত
+  ok('user cancel → Cancelled, trx released, late SMS does not pay it');
+
+  // ---- কেস ১০: পেইড অর্ডার বাতিল করা যায় না; অন্যের অর্ডার বাতিল করা যায় না
+  c1 = await call(orders, 'POST', '/api/orders/' + oid + '/cancel', {}); assert.strictEqual(c1.code, 409); // oid পেইড
+  r = await order('100 Diamond', 85, 'bkash', '01799999999', '66OTHER6666', user2);
+  c1 = await call(orders, 'POST', '/api/orders/' + r.obj.order._id + '/cancel', {}, user); assert.strictEqual(c1.code, 404);
+  ok('paid / foreign orders cannot be cancelled');
+
+  // ---- কেস ১১: add-money বাতিল
+  r = await call(walletRoute, 'POST', '/api/wallet/add-money', { method: 'bkash', amount: 100, senderNumber: '01700000001', trxId: '55CANCELAM1', mode: 'instant' });
+  const arid = r.obj.id;
+  c1 = await call(walletRoute, 'POST', '/api/wallet/requests/' + arid + '/cancel', {}); assert.strictEqual(c1.code, 200);
+  st = await call(walletRoute, 'GET', '/api/wallet/requests/' + arid); assert.strictEqual(st.obj.cancelled, true); assert.strictEqual(st.obj.paid, false);
+  const b0 = bal(); await hook(BK('100.00', '01700000001', '55CANCELAM1')); assert.strictEqual(bal(), b0); // বাতিল হওয়ায় টাকা যোগ হয়নি
+  c1 = await call(walletRoute, 'POST', '/api/wallet/requests/' + rid + '/cancel', {}); assert.strictEqual(c1.code, 409); // rid আগেই approved
+  ok('add-money cancel works, approved one cannot be cancelled');
+
+  // ================= অটো টপআপ =================
+  await M.Setting.create({ key: 'autotopup', value: { enabled: true, url: 'https://provider.test/api/topup', key: 'API-12345678', auth: 'bearer', map: { '310 Diamond': 'DM310' } } });
+  const calls = []; let reply = { ok: true, json: { status: 'success', transaction_id: 'T-1' } };
+  global.fetch = async (url, init) => { calls.push({ url, init }); if (reply.throw) throw new Error('timeout'); return { ok: reply.ok, status: reply.ok ? 200 : 500, json: async () => reply.json }; };
+  const autotopup = require('../services/autotopup');
+  const wait = (ms) => new Promise((r2) => setTimeout(r2, ms));
+
+  // ওয়ালেট পেইড অর্ডার → API ডাকা, Completed
+  r = await call(orders, 'POST', '/api/orders', { packageName: '310 Diamond', price: 255, uid: '555666777', payMethod: 'wallet' });
+  assert.strictEqual(r.code, 200, JSON.stringify(r.obj)); await wait(30);
+  let od = M.Order.rows.find((o) => o._id === r.obj.order._id);
+  assert.strictEqual(calls.length, 1);
+  assert.strictEqual(calls[0].init.headers.authorization, 'Bearer API-12345678');
+  const sent = JSON.parse(calls[0].init.body); assert.deepStrictEqual([sent.uid, sent.package, sent.order_id], ['555666777', 'DM310', od._id]);
+  assert.strictEqual(od.status, 'Completed'); assert.strictEqual(od.delivery, 'done'); assert.strictEqual(od.deliveryRef, 'T-1');
+  ok('wallet order → auto topup API → Completed');
+
+  // একসাথে দুবার ডাকলেও একবারই API
+  const before = calls.length;
+  const again = await Promise.all([autotopup.deliver(od._id), autotopup.deliver(od._id)]);
+  assert.strictEqual(calls.length, before); assert.ok(again.every((x) => !x.ok));
+  ok('no double topup');
+
+  // API ব্যর্থ → Pending থাকে, retry-তে সফল
+  reply = { ok: false, json: { message: 'insufficient provider balance' } };
+  await M.Wallet.findOneAndUpdate({ customerId: 'u1' }, { $inc: { balance: 1000 } });
+  r = await call(orders, 'POST', '/api/orders', { packageName: '310 Diamond', price: 255, uid: '555666778', payMethod: 'wallet' }); await wait(30);
+  od = M.Order.rows.find((o) => o._id === r.obj.order._id);
+  assert.strictEqual(od.status, 'Pending'); assert.strictEqual(od.delivery, 'failed'); assert.ok(/insufficient/.test(od.deliveryError));
+  reply = { ok: true, json: { success: true, id: 'T-2' } };
+  let rt = await autotopup.deliver(od._id); assert.strictEqual(rt.ok, false); // force ছাড়া আবার চলে না
+  rt = await autotopup.deliver(od._id, { force: true }); assert.strictEqual(rt.ok, true);
+  assert.strictEqual(M.Order.rows.find((o) => o._id === od._id).status, 'Completed');
+  ok('API failure keeps order Pending; admin retry succeeds');
+
+  // ম্যাপ নেই এমন প্যাকেজ → অটো না, হাতে ডেলিভারি
+  r = await call(orders, 'POST', '/api/orders', { packageName: '100 Diamond', price: 85, uid: '555666779', payMethod: 'wallet' }); await wait(30);
+  od = M.Order.rows.find((o) => o._id === r.obj.order._id);
+  assert.strictEqual(od.status, 'Pending'); assert.ok(!od.delivery || od.delivery === 'none');
+  ok('unmapped package stays manual');
+
+  // instant (SMS) অর্ডার পেইড হলে অটো টপআপ
+  r = await order('310 Diamond', 255, 'bkash', '01711110000', 'AUTO1TRX001', user2); assert.strictEqual(r.obj.verified, false);
+  await hook(BK('255.00', '01711110000', 'AUTO1TRX001')); await wait(30);
+  od = M.Order.rows.find((o) => o.trxId === 'AUTO1TRX001');
+  assert.strictEqual(od.paid, true); assert.strictEqual(od.status, 'Completed');
+  ok('SMS-verified order → auto topup');
+
+  // টাইমআউট → failed (অনিশ্চিত), Pending
+  reply = { throw: true };
+  r = await call(orders, 'POST', '/api/orders', { packageName: '310 Diamond', price: 255, uid: '555666780', payMethod: 'wallet' }); await wait(30);
+  od = M.Order.rows.find((o) => o._id === r.obj.order._id);
+  assert.strictEqual(od.status, 'Pending'); assert.strictEqual(od.delivery, 'failed');
+  ok('network error → failed, order stays Pending');
 
   console.log('\nসব টেস্ট পাস ✅', n);
 })().catch((e) => { console.error('FAIL', e); process.exit(1); });
