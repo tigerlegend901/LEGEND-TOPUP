@@ -7,9 +7,9 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<link rel="icon" type="image/png" href="icon-512.png">
-<link rel="shortcut icon" href="icon-512.png">
-<link rel="apple-touch-icon" href="icon-512.png">
+<link rel="icon" type="image/png" href="/icon-192.png?v=2">
+<link rel="shortcut icon" href="/icon-192.png?v=2">
+<link rel="apple-touch-icon" href="/icon-192.png?v=2">
 <link rel="manifest" href="manifest.json">
 <meta name="application-name" content="TIGER LEGEND TOPUP">
 <meta name="apple-mobile-web-app-title" content="TIGER LEGEND TOPUP">
@@ -3310,7 +3310,7 @@ setInterval(fetchFreshAccountConfig, 15000);
     empty.style.display=items.length?'none':'block';
     items.forEach(function(t){
       var st=String(t.status||'Completed'), cls=/pend|process/i.test(st)?'pending':(/cancel|fail|reject/i.test(st)?'cancelled':'');
-      var amt=Number(t.amount||0); if(!cls) sum+=amt;
+      var amt=Number(t.amount||0); sum+=Math.abs(amt);
       var tr=document.createElement('tr');
       tr.innerHTML='<td>'+esc(t.number)+'</td><td class="'+(amt<0?'neg':'pos')+'">'+(amt<0?'-':'+')+'৳'+Math.abs(amt)+'</td><td><span class="tr-st '+cls+'">'+esc(st)+'</span></td>';
       body.appendChild(tr);

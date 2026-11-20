@@ -1804,6 +1804,8 @@ function handle(req, res) {
     return res.end(body);
   }
   if (pathname === '/admin-icon-192.png' || pathname === '/admin-icon-512.png') {
+    const aIcon = path.join(ROOT_DIR, pathname);
+    if (fs.existsSync(aIcon)) { res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=300', 'X-Robots-Tag': 'noindex, nofollow' }); return res.end(fs.readFileSync(aIcon)); }
     const png = Buffer.from(pathname === '/admin-icon-192.png' ? ADMIN_ICON_192_B64 : ADMIN_ICON_512_B64, 'base64');
     res.writeHead(200, { 'Content-Type': 'image/png', 'Content-Length': png.length, 'Cache-Control': 'public, max-age=86400', 'X-Robots-Tag': 'noindex, nofollow' });
     return res.end(png);
