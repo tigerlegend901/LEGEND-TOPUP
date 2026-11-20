@@ -35,7 +35,7 @@ const AddRequest = def('AddRequest', new Schema({
   amount: { type: Number, required: true, min: 1 },
   senderNumber: String,
   trxId: { type: String, required: true },
-  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending', index: true },
+  status: { type: String, enum: ['pending', 'approved', 'rejected', 'cancelled'], default: 'pending', index: true },
   autoVerified: { type: Boolean, default: false },
   adminNote: String
 }, { timestamps: true }));
@@ -52,8 +52,12 @@ const Order = def('Order', new Schema({
   trxId: String,
   paid: { type: Boolean, default: false },
   autoVerified: { type: Boolean, default: false },
-  status: { type: String, enum: ['Pending', 'Completed', 'Rejected'], default: 'Pending', index: true },
+  status: { type: String, enum: ['Pending', 'Completed', 'Rejected', 'Cancelled'], default: 'Pending', index: true },
   deliveredCode: { type: String, default: '' },
+  // অটো টপআপ: none (চেষ্টা হয়নি) | processing | done | failed
+  delivery: { type: String, default: 'none', index: true },
+  deliveryRef: { type: String, default: '' },
+  deliveryError: { type: String, default: '' },
   adminNote: String
 }, { timestamps: true }));
 
