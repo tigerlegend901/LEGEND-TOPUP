@@ -141,6 +141,25 @@
     },
     "uc": {
       "name": "UID CHECKER"
+    },
+    "np": {
+      "packages": [
+        {
+          "label": "25 DIAMOND CODE",
+          "name": "25 DIAMOND CODE",
+          "price": 23
+        },
+        {
+          "label": "Package 2",
+          "name": "Package 2",
+          "price": 20
+        },
+        {
+          "label": "Package 3",
+          "name": "Package 3",
+          "price": 30
+        }
+      ]
     }
   },
   "texts": {
