@@ -52,7 +52,21 @@ async function handle(c) {
   if (method === 'GET' && (rm = pathname.match(/^\/api\/wallet\/requests\/([a-f0-9]{24})$/))) {
     const r = await AddRequest.findOne({ _id: rm[1], customerId: cid }).lean();
     if (!r) throw new HttpError(404, 'Request not found');
-    deps.sendJson(res, 200, { id: r._id, status: r.status, paid: r.status === 'approved', rejected: r.status === 'rejected' });
+    deps.sendJson(res, 200, { id: r._id, status: r.status, paid: r.status === 'approved', rejected: r.status === 'rejected' || r.status === 'cancelled', cancelled: r.status === 'cancelled' });
+    return true;
+  }
+
+  // ইউজার নিজে টাকা-যোগের অনুরোধ বাতিল করলে (শুধু pending থাকলে)। TrxID ছেড়ে দেওয়া হয়।
+  if (method === 'POST' && (rm = pathname.match(/^\/api\/wallet\/requests\/([a-f0-9]{24})\/cancel$/))) {
+    const r = await AddRequest.findOneAndUpdate({ _id: rm[1], customerId: cid, status: 'pending' }, { status: 'cancelled', adminNote: 'Cancelled by customer' }, { new: true });
+    if (!r) {
+      const cur = await AddRequest.findOne({ _id: rm[1], customerId: cid }).lean();
+      if (!cur) throw new HttpError(404, 'Request not found');
+      if (cur.status === 'cancelled') return deps.sendJson(res, 200, { ok: true, cancelled: true }), true;
+      throw new HttpError(409, cur.status === 'approved' ? 'পেমেন্ট ইতিমধ্যে যাচাই হয়ে টাকা যোগ হয়ে গেছে।' : 'এই অনুরোধ বাতিল করা যাবে না।');
+    }
+    await wallet.releaseTrx(r.trxId).catch(() => {});
+    deps.sendJson(res, 200, { ok: true, cancelled: true });
     return true;
   }
 

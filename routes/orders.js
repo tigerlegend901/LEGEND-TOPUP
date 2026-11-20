@@ -3,7 +3,8 @@ const wallet = require('../services/wallet');
 const { resolvePackage } = require('../services/pricing');
 const { settle } = require('../services/paymentVerify');
 const { publicUser } = require('../middleware/auth');
-const { notifyOrder } = require('../services/telegram');
+const { notifyOrder, notifyDelivery } = require('../services/telegram');
+const autotopup = require('../services/autotopup');
 
 const METHODS = ['bkash', 'nagad', 'rocket', 'upay', 'binance'];
 const SMS_METHODS = ['bkash', 'nagad', 'rocket'];
@@ -24,7 +25,28 @@ async function handle(c) {
   if (method === 'GET' && (sm = pathname.match(/^\/api\/orders\/([a-f0-9]{24})$/))) {
     const o = await Order.findOne({ _id: sm[1], customerId: cid }).lean();
     if (!o) throw new HttpError(404, 'Order not found');
-    deps.sendJson(res, 200, { id: o._id, status: o.status, paid: !!o.paid, autoVerified: !!o.autoVerified });
+    deps.sendJson(res, 200, {
+      id: o._id, status: o.status, paid: !!o.paid, autoVerified: !!o.autoVerified,
+      cancelled: o.status === 'Cancelled', rejected: o.status === 'Rejected' || o.status === 'Cancelled',
+      completed: o.status === 'Completed'
+    });
+    return true;
+  }
+
+  // ইউজার নিজে পেমেন্ট বাতিল করলে: শুধু এখনো-পেইড-না-হওয়া instant অর্ডার বাতিল করা যায়।
+  // TrxID ছেড়ে দেওয়া হয় (পেমেন্ট আসলে না করলে পরে আবার ব্যবহার করা যাবে)।
+  if (method === 'POST' && (sm = pathname.match(/^\/api\/orders\/([a-f0-9]{24})\/cancel$/))) {
+    const o = await Order.findOneAndUpdate(
+      { _id: sm[1], customerId: cid, payMethod: 'instant', paid: false, status: 'Pending' },
+      { status: 'Cancelled', adminNote: 'Cancelled by customer' }, { new: true });
+    if (!o) {
+      const cur = await Order.findOne({ _id: sm[1], customerId: cid }).lean();
+      if (!cur) throw new HttpError(404, 'Order not found');
+      if (cur.status === 'Cancelled') return deps.sendJson(res, 200, { ok: true, cancelled: true, order: cur }), true;
+      throw new HttpError(409, cur.paid ? 'পেমেন্ট ইতিমধ্যে যাচাই হয়ে গেছে, এখন বাতিল করা যাবে না।' : 'এই অর্ডার বাতিল করা যাবে না।');
+    }
+    if (o.trxId) await wallet.releaseTrx(o.trxId).catch(() => {});
+    deps.sendJson(res, 200, { ok: true, cancelled: true, order: o });
     return true;
   }
 
@@ -50,6 +72,8 @@ async function handle(c) {
       await order.save();
       notifyOrder(order, user);
       deps.sendJson(res, 200, { ok: true, order, user: publicUser(user, w.balance) });
+      // অটো টপআপ ব্যাকগ্রাউন্ডে (ইউজারকে অপেক্ষা করানো হয় না)
+      autotopup.deliver(order._id).then((r) => { if (r && r.state !== 'skipped') notifyDelivery(order, r); }).catch(() => {});
       return true;
     }
 

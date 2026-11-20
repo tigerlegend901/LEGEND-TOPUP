@@ -40,7 +40,7 @@ module.exports = function createApi(deps) {
       return true;
     }
     const isUser = pathname === '/api/orders' || pathname.startsWith('/api/orders/') || pathname.startsWith('/api/wallet/');
-    const isAdminR = pathname.startsWith('/api/admin/orders') || pathname.startsWith('/api/admin/addmoney') || pathname.startsWith('/api/admin/codes') || pathname.startsWith('/api/admin/users') || pathname.startsWith('/api/admin/payment');
+    const isAdminR = pathname.startsWith('/api/admin/orders') || pathname.startsWith('/api/admin/addmoney') || pathname.startsWith('/api/admin/codes') || pathname.startsWith('/api/admin/users') || pathname.startsWith('/api/admin/payment') || pathname.startsWith('/api/admin/autotopup');
     if (!isUser && !isAdminR) return false;
     try {
       if (isAdminR && !deps.isAdmin(req)) throw new HttpError(401, 'লগইন করুন');
