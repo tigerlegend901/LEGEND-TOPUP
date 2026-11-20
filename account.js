@@ -1,7 +1,7 @@
 // =======================================================
 // WEBSITE NAME (NICKNAME)
 // =======================================================
-var website_name = "TIGER LEGEND TOPUP BEST TOPUP SERVICE ";
+var website_name = "LEGEND TOPUP || FF TOPUP SERVICE ";
 
 // =======================================================
 // TELEGRAM CHANNEL LINK
