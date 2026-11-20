@@ -39,7 +39,7 @@ function notifyOrder(order, user) {
       'Player UID: <code>' + esc(o.uid) + '</code>',
       'প্রাইস: ' + esc(o.price) + ' BDT',
       'পেমেন্ট: ' + (o.payMethod === 'wallet' ? 'Wallet (পরিশোধিত)' : 'Instant (' + esc(o.via) + ')'),
-      o.payMethod === 'instant' ? 'TrxID: <code>' + esc(o.trxId) + '</code> | Sender: ' + esc(o.senderNumber) : '',
+      o.payMethod === 'instant' ? 'TrxID: <code>' + esc(o.trxId) + '</code>' + (o.senderNumber ? ' | Sender: ' + esc(o.senderNumber) : '') : '',
       'কাস্টমার: ' + esc(u.name) + ' (' + esc(u.email) + ')',
       o.autoVerified ? '✅ পেমেন্ট অটো ভেরিফাইড' : (o.payMethod === 'instant' ? '⏳ পেমেন্ট এখনো যাচাই হয়নি' : ''),
       'স্ট্যাটাস: ' + esc(o.status),
