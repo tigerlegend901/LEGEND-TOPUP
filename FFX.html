@@ -2433,7 +2433,7 @@ setInterval(fetchFreshAccountConfig, 15000);
   var LOGIN_URL='#auth';
 
   var BALANCE=0;          // ইউজারের ওয়ালেট ব্যালেন্স (ব্যাকএন্ড থেকে বসান)
-  var HOWTO_URL='#';      // "কিভাবে অর্ডার করবেন?" ভিডিও/গাইডের লিংক
+  var HOWTO_URL=(function(){if(window.__HOWTO)return window.__HOWTO;var t=document.querySelector('a.q[data-link="telegram-channel"]'),h=t&&t.getAttribute('href');return(h&&h!=='#')?h:'#';})();      // "কিভাবে অর্ডার করবেন?" ভিডিও/গাইডের লিংক
 
   var sel={name:'',price:0,pay:'Wallet Pay'};
   var toastEl=document.getElementById('toast'), tt;
@@ -2459,7 +2459,7 @@ setInterval(fetchFreshAccountConfig, 15000);
   };
   var how=document.getElementById('uidHow');
   how.onclick=function(e){ if(HOWTO_URL==='#') e.preventDefault(); };
-  how.href=HOWTO_URL;
+  how.href=HOWTO_URL; if(HOWTO_URL!=='#'){how.target='_blank';how.rel='noopener noreferrer';}
   var pks=document.querySelectorAll('#uidPkGrid .pk');
   var pkGrid=document.getElementById('uidPkGrid');
   function pickPk(e){
@@ -2515,7 +2515,7 @@ setInterval(fetchFreshAccountConfig, 15000);
   var LOGIN_URL='#auth';
 
   var BALANCE=0;          // ইউজারের ওয়ালেট ব্যালেন্স (ব্যাকএন্ড থেকে বসান)
-  var HOWTO_URL='#';      // "কিভাবে অর্ডার করবেন?" ভিডিও/গাইডের লিংক
+  var HOWTO_URL=(function(){if(window.__HOWTO)return window.__HOWTO;var t=document.querySelector('a.q[data-link="telegram-channel"]'),h=t&&t.getAttribute('href');return(h&&h!=='#')?h:'#';})();      // "কিভাবে অর্ডার করবেন?" ভিডিও/গাইডের লিংক
 
   var sel={name:'',price:0,pay:'Wallet Pay'};
   var toastEl=document.getElementById('toast'), tt;
@@ -2541,7 +2541,7 @@ setInterval(fetchFreshAccountConfig, 15000);
   };
   var how=document.getElementById('wmHow');
   how.onclick=function(e){ if(HOWTO_URL==='#') e.preventDefault(); };
-  how.href=HOWTO_URL;
+  how.href=HOWTO_URL; if(HOWTO_URL!=='#'){how.target='_blank';how.rel='noopener noreferrer';}
   var pks=document.querySelectorAll('#wmPkGrid .pk');
   var pkGrid=document.getElementById('wmPkGrid');
   function pickPk(e){
@@ -2597,7 +2597,7 @@ setInterval(fetchFreshAccountConfig, 15000);
   var LOGIN_URL='#auth';
 
   var BALANCE=0;          // ইউজারের ওয়ালেট ব্যালেন্স (ব্যাকএন্ড থেকে বসান)
-  var HOWTO_URL='#';      // "কিভাবে অর্ডার করবেন?" ভিডিও/গাইডের লিংক
+  var HOWTO_URL=(function(){if(window.__HOWTO)return window.__HOWTO;var t=document.querySelector('a.q[data-link="telegram-channel"]'),h=t&&t.getAttribute('href');return(h&&h!=='#')?h:'#';})();      // "কিভাবে অর্ডার করবেন?" ভিডিও/গাইডের লিংক
 
   var sel={name:'',price:0,pay:'Wallet Pay'};
   var toastEl=document.getElementById('toast'), tt;
@@ -2623,7 +2623,7 @@ setInterval(fetchFreshAccountConfig, 15000);
   };
   var how=document.getElementById('wlHow');
   how.onclick=function(e){ if(HOWTO_URL==='#') e.preventDefault(); };
-  how.href=HOWTO_URL;
+  how.href=HOWTO_URL; if(HOWTO_URL!=='#'){how.target='_blank';how.rel='noopener noreferrer';}
   var pks=document.querySelectorAll('#wlPkGrid .pk');
   var pkGrid=document.getElementById('wlPkGrid');
   function pickPk(e){
@@ -2677,7 +2677,7 @@ setInterval(fetchFreshAccountConfig, 15000);
   var LOGIN_URL='#auth';
 
   var BALANCE=0;          // ইউজারের ওয়ালেট ব্যালেন্স (ব্যাকএন্ড থেকে বসান)
-  var HOWTO_URL='#';      // "কিভাবে অর্ডার করবেন?" ভিডিও/গাইডের লিংক
+  var HOWTO_URL=(function(){if(window.__HOWTO)return window.__HOWTO;var t=document.querySelector('a.q[data-link="telegram-channel"]'),h=t&&t.getAttribute('href');return(h&&h!=='#')?h:'#';})();      // "কিভাবে অর্ডার করবেন?" ভিডিও/গাইডের লিংক
 
   var sel={name:'',price:0,pay:'Wallet Pay'};
   var toastEl=document.getElementById('toast'), tt;
@@ -2703,7 +2703,7 @@ setInterval(fetchFreshAccountConfig, 15000);
   };
   var how=document.getElementById('npHow');
   how.onclick=function(e){ if(HOWTO_URL==='#') e.preventDefault(); };
-  how.href=HOWTO_URL;
+  how.href=HOWTO_URL; if(HOWTO_URL!=='#'){how.target='_blank';how.rel='noopener noreferrer';}
   var pks=document.querySelectorAll('#npPkGrid .pk');
   var pkGrid=document.getElementById('npPkGrid');
   function pickPk(e){
@@ -2759,7 +2759,7 @@ setInterval(fetchFreshAccountConfig, 15000);
   var LOGIN_URL='#auth';
 
   var BALANCE=0;          // ইউজারের ওয়ালেট ব্যালেন্স (ব্যাকএন্ড থেকে বসান)
-  var HOWTO_URL='#';      // "কিভাবে অর্ডার করবেন?" ভিডিও/গাইডের লিংক
+  var HOWTO_URL=(function(){if(window.__HOWTO)return window.__HOWTO;var t=document.querySelector('a.q[data-link="telegram-channel"]'),h=t&&t.getAttribute('href');return(h&&h!=='#')?h:'#';})();      // "কিভাবে অর্ডার করবেন?" ভিডিও/গাইডের লিংক
 
   var sel={name:'',price:0,pay:'Wallet Pay'};
   var toastEl=document.getElementById('toast'), tt;
@@ -2785,7 +2785,7 @@ setInterval(fetchFreshAccountConfig, 15000);
   };
   var how=document.getElementById('luHow');
   how.onclick=function(e){ if(HOWTO_URL==='#') e.preventDefault(); };
-  how.href=HOWTO_URL;
+  how.href=HOWTO_URL; if(HOWTO_URL!=='#'){how.target='_blank';how.rel='noopener noreferrer';}
   var pks=document.querySelectorAll('#luPkGrid .pk');
   var pkGrid=document.getElementById('luPkGrid');
   function pickPk(e){
@@ -2841,7 +2841,7 @@ setInterval(fetchFreshAccountConfig, 15000);
   var LOGIN_URL='#auth';
 
   var BALANCE=0;          // ইউজারের ওয়ালেট ব্যালেন্স (ব্যাকএন্ড থেকে বসান)
-  var HOWTO_URL='#';      // "কিভাবে অর্ডার করবেন?" ভিডিও/গাইডের লিংক
+  var HOWTO_URL=(function(){if(window.__HOWTO)return window.__HOWTO;var t=document.querySelector('a.q[data-link="telegram-channel"]'),h=t&&t.getAttribute('href');return(h&&h!=='#')?h:'#';})();      // "কিভাবে অর্ডার করবেন?" ভিডিও/গাইডের লিংক
 
   var sel={name:'',price:0,pay:'Wallet Pay'};
   var toastEl=document.getElementById('toast'), tt;
@@ -2867,7 +2867,7 @@ setInterval(fetchFreshAccountConfig, 15000);
   };
   var how=document.getElementById('inHow');
   how.onclick=function(e){ if(HOWTO_URL==='#') e.preventDefault(); };
-  how.href=HOWTO_URL;
+  how.href=HOWTO_URL; if(HOWTO_URL!=='#'){how.target='_blank';how.rel='noopener noreferrer';}
   var pks=document.querySelectorAll('#inPkGrid .pk');
   var pkGrid=document.getElementById('inPkGrid');
   function pickPk(e){

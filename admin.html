@@ -589,6 +589,7 @@ function drawSite(){
      '<div class="s-quick">'+q.map(function(x,i){
         return '<div class="ed"><span class="s-q"><span class="s-ic">'+svgi(QICON[i],1)+'</span><b>'+esc(x.label)+'</b></span>'+pen('Edit '+QNAME[i],'q'+i)+'</div>';
      }).join('')+'</div>'+
+     '<div class="ed s-help" style="margin-top:14px"><span class="s-ic">?</span><span><b>"How to order?" button</b><small style="word-break:break-all">'+(tv('howto')?esc(tv('howto')):'Using the Telegram link (tap the pen to set a video / guide link)')+'</small></span>'+pen('Edit "How to order?" link','t:howto')+'</div>'+
      sec('sec1')+'<div class="s-grid">'+top.map(pc).join('')+'</div>'+
      '<div style="margin:14px 0 4px"><button type="button" class="btn block" id="addProd">'+icon('plus','width:16px;height:16px')+'Add Product</button></div>'+
      sec('sec2')+'<div class="s-grid">'+uc.map(pc).join('')+'</div>'+
@@ -752,7 +753,7 @@ function textBlock(id,done,num){
   var t=state.cfg.texts.filter(function(x){return x.id===id})[0];
   var d=sc(num,'edit',t.label,t.url?'Paste the full link':(t.multi?'You can write more than one line':'Type the new text'));
   $('.sc-b',d).innerHTML=
-    (t.multi?'<textarea class="ta" maxlength="'+t.max+'"></textarea>':'<input class="inp" maxlength="'+t.max+'"'+(t.url?' inputmode="url" autocapitalize="off" placeholder="https://play.google.com/..."':'')+'>')+
+    (t.multi?'<textarea class="ta" maxlength="'+t.max+'"></textarea>':'<input class="inp" maxlength="'+t.max+'"'+(t.url?' inputmode="url" autocapitalize="off" placeholder="https://..."':'')+'>')+
     '<div class="btns"><button type="button" class="btn sm" data-a="s">'+icon('save','width:16px;height:16px')+'Save</button>'+
     (t.custom?'<button type="button" class="btn ghost sm" data-a="r">'+icon('undo','width:16px;height:16px')+'Default</button>':'')+'</div>';
   var inp=$('.ta,.inp',d);inp.value=t.value;

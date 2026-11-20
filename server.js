@@ -109,7 +109,8 @@ const TEXTS = [
   { id: 'warn', label: 'Footer warning', def: '১৮ বছরের নিচে অভিভাবকের অনুমতি ছাড়া অর্ডার করা সম্পূর্ণ নিষিদ্ধ।', max: 300, multi: true },
   { id: 'notice', label: 'Top notice bar (moving text). Empty = bar hidden', def: '', max: 300 },
   { id: 'dlTitle', label: 'App download title', def: 'DOWNLOAD OUR MOBILE APP', max: 60 },
-  { id: 'playUrl', label: 'Google Play link', def: '', max: 300, url: true }
+  { id: 'playUrl', label: 'Google Play link', def: '', max: 300, url: true },
+  { id: 'howto', label: '"How to order?" button link (video / guide). Empty = Telegram link', def: '', max: 300, url: true }
 ];
 
 function emptyCfg() { return { logo: null, ffBanner: null, banners: null, quick: null, images: null, prod: null, texts: null, custom: null, hideNp: false }; }
@@ -589,11 +590,12 @@ function applyTexts(html, inj) {
     html = html.replace(/(<p id="popText">)[\s\S]*?(<\/p>)/, function (m, a, b) { return a + esc(T.pop).split(/\r?\n/).join('<br>') + b; });
   }
   TEXTS.forEach(function (t) {
-    if (!T[t.id] || t.id === 'siteName' || t.id === 'pop' || t.id === 'playUrl' || t.id === 'notice') return;
+    if (!T[t.id] || t.id === 'siteName' || t.id === 'pop' || t.id === 'playUrl' || t.id === 'notice' || t.id === 'howto') return;
     const w = t.wrap || ['>', '<'];
     html = html.split(w[0] + t.def + w[1]).join(w[0] + esc(T[t.id]) + w[1]);
   });
   if (T.hours) html = html.split(TEXTS.filter(function (t) { return t.id === 'hours'; })[0].def).join(esc(T.hours));
+  if (T.howto) inj.push('window.__HOWTO = ' + jsStr(T.howto) + ';');
   if (T.playUrl) html = html.replace('<a class="play" href="#">', '<a class="play" href="' + esc(T.playUrl) + '" target="_blank" rel="noopener noreferrer">');
   return html;
 }
