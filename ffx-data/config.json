@@ -139,9 +139,6 @@
         }
       ]
     },
-    "uc": {
-      "name": "UID CHECKER"
-    },
     "np": {
       "name": "UNIPIN VOUCHER",
       "title": "UNIPIN VOUCHER",
@@ -162,11 +159,15 @@
           "price": 30
         }
       ]
+    },
+    "uc": {
+      "name": "UID CHECKER"
     }
   },
   "texts": {
     "pop": "‼️ THIS WEBSITE IS UNDER MAINTENANCE  WAIT FOR COMPLETE‼️",
-    "notice": "🐯 TIGER LEGEND TOPUP 🐯  🔥 আমাদের সার্ভিস ২৪/৭ চালু রয়েছে! ⚡ দিন-রাত ২৪ ঘণ্টা, সপ্তাহের ৭ দিন যেকোনো সময় অর্ডার করতে পারবেন। 💎 দ্রুত, সহজ ও নিরাপদে গেম টপ-আপ করুন। ❤️ ধন্যবাদ আমাদের সাথে থাকার জন্য!"
+    "notice": "🐯 TIGER LEGEND TOPUP 🐯  🔥 আমাদের সার্ভিস ২৪/৭ চালু রয়েছে! ⚡ দিন-রাত ২৪ ঘণ্টা, সপ্তাহের ৭ দিন যেকোনো সময় অর্ডার করতে পারবেন। 💎 দ্রুত, সহজ ও নিরাপদে গেম টপ-আপ করুন। ❤️ ধন্যবাদ আমাদের সাথে থাকার জন্য!",
+    "howto": "https://youtu.be/26M7gvChhgI?si=sV4pdpiItGAdpAcW"
   },
   "custom": null,
   "hideNp": false
