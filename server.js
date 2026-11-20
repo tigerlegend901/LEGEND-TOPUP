@@ -681,7 +681,7 @@ function injectForgot(html) {
 }
 
 // ---- অ্যাপ ইনস্টল (PWA): manifest লিংক + "অ্যাপ ইনস্টল করুন" বার ----
-const PWA_HEAD = '<link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#1e63f0"><link rel="apple-touch-icon" href="/icon-192.png">';
+const PWA_HEAD = '<link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#1e63f0"><link rel="apple-touch-icon" href="/icon-192.png?v=2">';
 const PWA_BODY = `
 <style>
 #ffxPwa{position:fixed;left:10px;right:10px;bottom:84px;z-index:9000;display:none;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:#14181f;color:#eef1f6;border:1px solid #29303c;box-shadow:0 6px 24px rgba(0,0,0,.35);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
@@ -691,7 +691,7 @@ const PWA_BODY = `
 #ffxPwaGo{background:#28d7a0;color:#062318}
 #ffxPwaX{background:transparent;color:#9aa3b2;font-size:22px;line-height:1;padding:4px 8px}
 </style>
-<div id="ffxPwa" role="dialog" aria-label="অ্যাপ ইনস্টল"><img src="/icon-192.png" alt=""><span id="ffxPwaTxt">TIGER LEGEND TOPUP অ্যাপ ইনস্টল করুন</span><button id="ffxPwaGo" type="button">ইনস্টল</button><button id="ffxPwaX" type="button" aria-label="বন্ধ করুন">×</button></div>
+<div id="ffxPwa" role="dialog" aria-label="অ্যাপ ইনস্টল"><img src="/icon-192.png?v=2" alt=""><span id="ffxPwaTxt">TIGER LEGEND TOPUP অ্যাপ ইনস্টল করুন</span><button id="ffxPwaGo" type="button">ইনস্টল</button><button id="ffxPwaX" type="button" aria-label="বন্ধ করুন">×</button></div>
 <script>
 (function () {
   if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); }); }
@@ -1807,9 +1807,9 @@ function handle(req, res) {
       display: 'standalone', orientation: 'portrait',
       background_color: '#f5f8ff', theme_color: '#2563eb',
       icons: [
-        { src: '/admin-icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-        { src: '/admin-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-        { src: '/admin-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+        { src: '/admin-icon-192.png?v=2', sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: '/admin-icon-512.png?v=2', sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: '/admin-icon-512.png?v=2', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
       ]
     };
     const body = JSON.stringify(man);
@@ -1880,9 +1880,9 @@ function handle(req, res) {
   // অ্যাপ আইকন: আগে রিপোতে আপলোড করা icon-192.png / icon-512.png ফাইল, না থাকলে কোডের ভেতরের ডিফল্ট আইকন
   if (pathname === '/icon-192.png' || pathname === '/icon-512.png') {
     const iconFile = path.join(ROOT_DIR, pathname);
-    if (fs.existsSync(iconFile)) return serveFile(iconFile, res, 'public, max-age=300');
+    if (fs.existsSync(iconFile)) return serveFile(iconFile, res, 'no-cache');
     const png = Buffer.from(pathname === '/icon-192.png' ? ICON_192_B64 : ICON_512_B64, 'base64');
-    res.writeHead(200, { 'Content-Type': 'image/png', 'Content-Length': png.length, 'Cache-Control': 'public, max-age=86400' });
+    res.writeHead(200, { 'Content-Type': 'image/png', 'Content-Length': png.length, 'Cache-Control': 'no-cache' });
     return res.end(png);
   }
 
