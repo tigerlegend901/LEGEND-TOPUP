@@ -143,6 +143,8 @@
       "name": "UID CHECKER"
     },
     "np": {
+      "name": "UNIPIN VOUCHER",
+      "title": "UNIP",
       "packages": [
         {
           "label": "25 DIAMOND CODE",
