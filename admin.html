@@ -1054,8 +1054,8 @@ function renderPayment(main){
   (async function(){
     try{
       var r=await api('/api/admin/payment'),p=r.payment||{};
-      var c=card(w,'<b>Payment numbers shown to customers</b><div class="xm">Leave a box empty to hide that method number.</div>'+
-        [['bkash','bKash'],['nagad','Nagad'],['rocket','Rocket']].map(function(m){return '<label class="lb">'+m[1]+'</label><input class="inp" data-k="'+m[0]+'" inputmode="tel" maxlength="20" value="'+esc(p[m[0]]||'')+'">'}).join(''));
+      var c=card(w,'<b>Payment details shown to customers</b><div class="xm">Leave a field empty to hide that payment method.</div>'+
+        [['bkash','bKash number'],['nagad','Nagad number'],['rocket','Rocket number'],['upay','Upay number'],['binance','Binance Pay ID / USDT wallet address'],['binanceNetwork','Binance network / type (e.g. TRC20, BEP20, Binance Pay)']].map(function(m){return '<label class="lb">'+m[1]+'</label><input class="inp" data-k="'+m[0]+'" maxlength="200" value="'+esc(p[m[0]]||'')+'">'}).join(''));
       var sv=mini('Save numbers','',function(){act(sv,async function(){
         var b={};c.querySelectorAll('input').forEach(function(i){b[i.dataset.k]=i.value});
         await api('/api/admin/payment',b);toast('Saved, customers see the new numbers','ok');sv.disabled=false;
