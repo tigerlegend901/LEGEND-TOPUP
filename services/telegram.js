@@ -61,6 +61,18 @@ function notifyAutoPaid(kind, doc) {
   } catch (e) { console.error('notifyAutoPaid error:', e && e.message); }
 }
 
+// অটো টপআপের ফলাফল অ্যাডমিনকে জানায়
+function notifyDelivery(order, r) {
+  if (!TOKEN || !ADMIN_CHAT) return;
+  try {
+    const o = order || {};
+    const lines = r && r.ok
+      ? ['🚀 <b>অটো টপআপ সম্পন্ন</b>', 'প্যাকেজ: ' + esc(o.packageName), 'Player UID: <code>' + esc(o.uid) + '</code>', 'অর্ডার আইডি: <code>' + esc(o._id) + '</code>']
+      : ['⚠️ <b>অটো টপআপ ব্যর্থ — হাতে দেখুন</b>', 'প্যাকেজ: ' + esc(o.packageName), 'Player UID: <code>' + esc(o.uid) + '</code>', 'কারণ: ' + esc(r && r.reason), 'অর্ডার আইডি: <code>' + esc(o._id) + '</code>'];
+    call('sendMessage', { chat_id: ADMIN_CHAT, text: lines.join('\n'), parse_mode: 'HTML' });
+  } catch (e) { console.error('notifyDelivery error:', e && e.message); }
+}
+
 async function handleUpdate(update) {
   const m = update && update.message;
   if (!m || !m.chat) return;
@@ -78,4 +90,4 @@ async function setupWebhook(baseUrl) {
   return !!(j && j.ok);
 }
 
-module.exports = { notifyOrder, notifyAutoPaid, handleUpdate, setupWebhook, webhookSecret };
+module.exports = { notifyOrder, notifyAutoPaid, notifyDelivery, handleUpdate, setupWebhook, webhookSecret };

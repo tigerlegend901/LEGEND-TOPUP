@@ -3,6 +3,8 @@
 // SMS আগে এলেও পরে এলেও কাজ করে: দুই দিক থেকেই settle(trxId) ডাকা হয় (webhook + অর্ডার/অনুরোধ তৈরির পর)।
 const { sameNumber } = require('./smsParse');
 const wallet = require('./wallet');
+const autotopup = require('./autotopup');
+const telegram = require('./telegram');
 
 const normTrx = (t) => String(t || '').trim().toUpperCase();
 
@@ -47,6 +49,8 @@ async function settle(trxId, opts) {
     const done = await Order.findOneAndUpdate({ _id: od._id, paid: false, status: 'Pending' }, { paid: true, autoVerified: true }, { new: true });
     if (!done) { await unclaim(); return null; }
     if (notify) notify('order', done);
+    // পেমেন্ট নিশ্চিত → অটো টপআপ (ব্যাকগ্রাউন্ডে; ব্যর্থ হলে অর্ডার Pending থেকে যায়)
+    autotopup.deliver(done._id).then((r) => { if (r && r.state !== 'skipped') telegram.notifyDelivery(done, r); }).catch(() => {});
     return { kind: 'order', doc: done };
   }
   return null;
