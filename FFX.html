@@ -2962,7 +2962,7 @@ setInterval(fetchFreshAccountConfig, 15000);
 // 11. MY CODES PAGE
 // ==========================================
 (function(){
-  var REDEEM_URL='#'; // "Redeem Code" বাটনের লিংক/পেজ এখানে বসান
+  var REDEEM_URL='https://shop.garena.my'; // "Redeem Code" বাটনের লিংক/পেজ এখানে বসান
   var list=document.getElementById('cdList'), empty=document.getElementById('cdEmpty');
   var panel=document.getElementById('accPanel');
   var navLinks=[].slice.call(document.querySelectorAll('nav.nav a'));
@@ -4324,7 +4324,8 @@ setInterval(fetchFreshAccountConfig, 15000);
   document.addEventListener('click', function (e) {
     var b = e.target && e.target.closest ? e.target.closest('#cdRedeem') : null;
     if (!b) return;
-    e.preventDefault(); e.stopImmediatePropagation(); openRedeem();
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open('https://shop.garena.my', '_blank', 'noopener');
   }, true);
 
   var spOrig = window.setProfile;
