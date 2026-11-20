@@ -96,7 +96,6 @@
       (fixedAmount
         ? '<div class="fo-card">পাঠানোর পরিমাণ: <b>' + taka(fixedAmount) + '</b></div>'
         : '<label>কত টাকা যোগ করবেন (৳)<input id="foAmt" type="number" inputmode="numeric" min="1" placeholder="যেমন: 100"></label>') +
-      '<label>আপনার যে নম্বর থেকে পাঠিয়েছেন<input id="foSender" inputmode="numeric" maxlength="11" placeholder="01XXXXXXXXX"></label>' +
       '<label>Transaction ID (TrxID)<input id="foTrx" autocapitalize="characters" placeholder="যেমন: 9AB3CD45EF"></label>';
   }
   function wirePay(m) {
@@ -117,7 +116,7 @@
     showNum();
     return function () {
       var amt = q(m, '#foAmt');
-      return { method: method, senderNumber: q(m, '#foSender').value.trim(), trxId: q(m, '#foTrx').value.trim(), amount: amt ? Number(amt.value) : undefined };
+      return { method: method, trxId: q(m, '#foTrx').value.trim(), amount: amt ? Number(amt.value) : undefined };
     };
   }
 
@@ -142,7 +141,7 @@
           e.preventDefault();
           var btn = q(m, '#foS'), err = q(m, '#foE'); err.textContent = ''; btn.disabled = true;
           var p = read();
-          api('/wallet/add-money', 'POST', { method: p.method, amount: p.amount, senderNumber: p.senderNumber, trxId: p.trxId, mode: 'instant' })
+          api('/wallet/add-money', 'POST', { method: p.method, amount: p.amount, trxId: p.trxId, mode: 'instant' })
             .then(function (r) {
               if (r.approved) return r;
               btn.textContent = 'পেমেন্ট SMS যাচাই হচ্ছে…';
@@ -160,11 +159,11 @@
   }
 
   // ---------- Order ----------
-  // অটো ভেরিফাইয়ের অপেক্ষা: ৩ সেকেন্ড পরপর সার্ভারে দেখে, সর্বোচ্চ ~২ মিনিট। পেইড হলে true।
+  // অটো ভেরিফাইয়ের অপেক্ষা: ২ সেকেন্ড পরপর সার্ভারে দেখে, সর্বোচ্চ ~৩০ সেকেন্ড। পেইড হলে true।
   function pollPaid(path) {
     var tries = 0;
     return new Promise(function (resolve) {
-      function next() { if (++tries >= 40) resolve(false); else setTimeout(tick, 3000); }
+      function next() { if (++tries >= 15) resolve(false); else setTimeout(tick, 2000); }
       function tick() {
         api(path).then(function (d) {
           if (d.paid) return resolve(true);
@@ -172,13 +171,13 @@
           next();
         }, next);
       }
-      setTimeout(tick, 2000);
+      setTimeout(tick, 1000);
     });
   }
 
   function placeOrder(c, extra, m) {
     var body = { packageName: c.name, price: c.price, uid: c.uid, payMethod: extra.payMethod };
-    if (extra.payMethod === 'instant') { body.via = extra.via; body.senderNumber = extra.senderNumber; body.trxId = extra.trxId; }
+    if (extra.payMethod === 'instant') { body.via = extra.via; body.trxId = extra.trxId; }
     return api('/orders', 'POST', body).then(function (r) {
       if (r.user) setWalletText(r.user.balance || 0);
       if (extra.payMethod !== 'instant' || !r.order || r.order.paid) return r;
@@ -228,7 +227,7 @@
           e.preventDefault();
           var btn = q(m, '#foS'), err = q(m, '#foE'); err.textContent = ''; btn.disabled = true;
           var p = read();
-          placeOrder(c, { payMethod: 'instant', via: p.method, senderNumber: p.senderNumber, trxId: p.trxId }, m)
+          placeOrder(c, { payMethod: 'instant', via: p.method, trxId: p.trxId }, m)
             .then(null, function (ex) { err.textContent = ex.message; btn.disabled = false; });
         };
       });
