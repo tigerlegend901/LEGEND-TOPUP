@@ -25,7 +25,7 @@ async function handle(c) {
     const trxId = String(b.trxId || '').trim().toUpperCase();
     if (!METHODS.includes(via)) throw new HttpError(400, 'Choose bKash, Nagad or Rocket');
     if (!Number.isFinite(amount) || amount < 1 || amount > 100000) throw new HttpError(400, 'Enter a valid amount');
-    if (!/^01\d{9}$/.test(senderNumber)) throw new HttpError(400, 'Enter a valid 11-digit sender number');
+    if (senderNumber && !/^01\d{9}$/.test(senderNumber)) throw new HttpError(400, 'Enter a valid 11-digit sender number'); // ঐচ্ছিক
     if (!/^[A-Z0-9]{6,20}$/.test(trxId)) throw new HttpError(400, 'Enter a valid Transaction ID');
     const pendingCount = await AddRequest.countDocuments({ customerId: cid, status: 'pending' });
     if (pendingCount >= 3) throw new HttpError(429, 'আপনার ৩টি অনুরোধ এখনো যাচাই হচ্ছে। যাচাই শেষ হলে নতুন অনুরোধ করুন।');
