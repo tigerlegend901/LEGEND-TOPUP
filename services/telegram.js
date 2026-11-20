@@ -41,11 +41,24 @@ function notifyOrder(order, user) {
       'পেমেন্ট: ' + (o.payMethod === 'wallet' ? 'Wallet (পরিশোধিত)' : 'Instant (' + esc(o.via) + ')'),
       o.payMethod === 'instant' ? 'TrxID: <code>' + esc(o.trxId) + '</code> | Sender: ' + esc(o.senderNumber) : '',
       'কাস্টমার: ' + esc(u.name) + ' (' + esc(u.email) + ')',
+      o.autoVerified ? '✅ পেমেন্ট অটো ভেরিফাইড' : (o.payMethod === 'instant' ? '⏳ পেমেন্ট এখনো যাচাই হয়নি' : ''),
       'স্ট্যাটাস: ' + esc(o.status),
       'অর্ডার আইডি: <code>' + esc(o._id) + '</code>'
     ].filter(Boolean);
     call('sendMessage', { chat_id: ADMIN_CHAT, text: lines.join('\n'), parse_mode: 'HTML' });
   } catch (e) { console.error('notifyOrder error:', e && e.message); }
+}
+
+// SMS পরে এসে পেমেন্ট অটো ভেরিফাই হলে অ্যাডমিনকে জানায়
+function notifyAutoPaid(kind, doc) {
+  if (!TOKEN || !ADMIN_CHAT) return;
+  try {
+    const d = doc || {};
+    const lines = kind === 'order'
+      ? ['✅ <b>অর্ডারের পেমেন্ট অটো ভেরিফাইড</b>', 'প্যাকেজ: ' + esc(d.packageName), 'Player UID: <code>' + esc(d.uid) + '</code>', 'প্রাইস: ' + esc(d.price) + ' BDT', 'TrxID: <code>' + esc(d.trxId) + '</code>', 'অর্ডার আইডি: <code>' + esc(d._id) + '</code>']
+      : ['✅ <b>অ্যাড-মানি অটো অনুমোদিত</b>', 'পরিমাণ: ' + esc(d.amount) + ' BDT (' + esc(d.method) + ')', 'TrxID: <code>' + esc(d.trxId) + '</code>'];
+    call('sendMessage', { chat_id: ADMIN_CHAT, text: lines.join('\n'), parse_mode: 'HTML' });
+  } catch (e) { console.error('notifyAutoPaid error:', e && e.message); }
 }
 
 async function handleUpdate(update) {
@@ -65,4 +78,4 @@ async function setupWebhook(baseUrl) {
   return !!(j && j.ok);
 }
 
-module.exports = { notifyOrder, handleUpdate, setupWebhook, webhookSecret };
+module.exports = { notifyOrder, notifyAutoPaid, handleUpdate, setupWebhook, webhookSecret };

@@ -1,27 +1,55 @@
-// services/paymentVerify.js — অটো পেমেন্ট যাচাই (SMS ফরওয়ার্ডিং পদ্ধতি)।
-// আপনার ফোনে bKash/Nagad/Rocket-এর SMS এলে ফোনের অ্যাপ সেটা /api/sms-webhook-এ পাঠায় (routes/index.js)।
-// এখানে TrxID + অঙ্ক + পাঠানো নাম্বার মিললে true ফেরত দেয়। মিলে না বা SMS না এলে false → অ্যাডমিন হাতে Approve করেন।
+// services/paymentVerify.js — অটো পেমেন্ট ভেরিফাই (SMS ফরওয়ার্ডিং)।
+// ফোনের SMS → /api/sms-webhook → SmsPayment-এ জমা। অর্ডার/টাকা-যোগের অনুরোধ আর SMS দুটো মিললে settle() নিজে অনুমোদন করে।
+// SMS আগে এলেও পরে এলেও কাজ করে: দুই দিক থেকেই settle(trxId) ডাকা হয় (webhook + অর্ডার/অনুরোধ তৈরির পর)।
 const { sameNumber } = require('./smsParse');
+const wallet = require('./wallet');
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const normTrx = (t) => String(t || '').trim().toUpperCase();
 
-async function verifyTrx({ trxId, amount, method, senderNumber }) {
-  if (!(process.env.SMS_WEBHOOK_KEY || '').trim()) return false; // সেটআপ করা নেই
-  const { SmsPayment } = require('../models');
-  trxId = String(trxId || '').trim().toUpperCase();
-  // SMS আসতে কয়েক সেকেন্ড দেরি হতে পারে, তাই ~১০ সেকেন্ড অপেক্ষা
-  for (let i = 0; i < 4; i++) {
-    const s = await SmsPayment.findOne({ trxId, used: false }).lean();
-    if (s) {
-      if (!(s.amount + 0.001 >= Number(amount))) return false;
-      if (s.method && method && s.method !== method) return false;
-      if (s.sender && senderNumber && !sameNumber(s.sender, senderNumber)) return false;
-      const got = await SmsPayment.findOneAndUpdate({ _id: s._id, used: false }, { used: true });
-      return !!got;
-    }
-    if (i < 3) await sleep(3500);
-  }
-  return false;
+// SMS-এর টাকা/মাধ্যম/প্রেরক অর্ডারের সাথে মেলে কিনা
+function fits(sms, amount, method, sender) {
+  if (!(Number(sms.amount) + 0.001 >= Number(amount))) return false;
+  if (sms.method && method && sms.method !== method) return false;
+  if (sms.sender && sender && !sameNumber(sms.sender, sender)) return false;
+  return true;
 }
 
-module.exports = { verifyTrx };
+// ফেরত: { kind: 'order' | 'addmoney', doc } অথবা null (মেলেনি / SMS আসেনি / আগেই ব্যবহার হয়েছে)
+async function settle(trxId, opts) {
+  const { SmsPayment, AddRequest, Order } = require('../models');
+  const notify = opts && opts.notify;
+  trxId = normTrx(trxId);
+  if (!trxId) return null;
+
+  const sms = await SmsPayment.findOne({ trxId, used: false }).lean();
+  if (!sms) return null;
+
+  const claim = (usedFor) => SmsPayment.findOneAndUpdate({ _id: sms._id, used: false }, { used: true, usedFor });
+  const unclaim = () => SmsPayment.updateOne({ _id: sms._id }, { used: false, usedFor: '' }).catch(() => {});
+
+  // ১) ওয়ালেটে টাকা যোগের অনুরোধ
+  const ar = await AddRequest.findOne({ trxId, status: 'pending' });
+  if (ar) {
+    if (!fits(sms, ar.amount, ar.method, ar.senderNumber)) return null;
+    if (!(await claim('addmoney:' + ar._id))) return null;
+    const done = await AddRequest.findOneAndUpdate({ _id: ar._id, status: 'pending' }, { status: 'approved', autoVerified: true }, { new: true });
+    if (!done) { await unclaim(); return null; }
+    await wallet.credit(done.customerId, done.amount, 'Add money (' + done.method + ')', done._id);
+    if (notify) notify('addmoney', done);
+    return { kind: 'addmoney', doc: done };
+  }
+
+  // ২) ইনস্ট্যান্ট পে অর্ডার
+  const od = await Order.findOne({ trxId, payMethod: 'instant', paid: false, status: 'Pending' });
+  if (od) {
+    if (!fits(sms, od.price, od.via, od.senderNumber)) return null;
+    if (!(await claim('order:' + od._id))) return null;
+    const done = await Order.findOneAndUpdate({ _id: od._id, paid: false, status: 'Pending' }, { paid: true, autoVerified: true }, { new: true });
+    if (!done) { await unclaim(); return null; }
+    if (notify) notify('order', done);
+    return { kind: 'order', doc: done };
+  }
+  return null;
+}
+
+module.exports = { settle, fits, normTrx };
