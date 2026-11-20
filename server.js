@@ -531,7 +531,11 @@ function applyCustomProducts(html) {
     out = out.slice(0, jend) + '\n' + jss + out.slice(jend);
     out = out.slice(0, em + '</main>'.length) + views + out.slice(em + '</main>'.length);
     out = out.replace('</head>', function (m) { return '<style id="ffx-cp-css">' + css + '\n</style>' + m; });
-    out = out.replace(cardRe, function (m) { return (config.hideNp ? '' : m) + cards; });
+    // কাস্টম প্রোডাক্ট (যেমন UNIPIN VOUCHER) এখন আলাদা "LEGEND" হেডিংয়ের নিচে নিজের grid-এ বসে
+    out = out.replace(cardRe, function (m) {
+      return (config.hideNp ? '' : m) +
+        '\n  </div>\n\n  <div class="sec"><h2><em>LEGEND</em></h2></div>\n  <div class="grid">' + cards;
+    });
 
     const map = list.map(function (x) { return { h: hashOf(x), v: pre(x) + 'View' }; });
     const fix = '<script>(function(){var CP=' + JSON.stringify(map) + ';' +
