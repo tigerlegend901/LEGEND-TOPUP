@@ -412,7 +412,8 @@ var SECTIONS=[
   {id:'users',title:'Users & balance',icon:'edit',render:renderUsers},
   {id:'codes',title:'Redeem codes',icon:'edit',render:renderCodes},
   {id:'payment',title:'Payment numbers',icon:'edit',render:renderPayment},
-  {id:'autotopup',title:'Auto Topup API',icon:'edit',render:renderAutoTopup}
+  {id:'autotopup',title:'Auto Topup API',icon:'edit',render:renderAutoTopup},
+  {id:'howto',title:'How to order link',icon:'ext',render:renderHowto}
 ];
 
 function openMenu(){
@@ -589,7 +590,6 @@ function drawSite(){
      '<div class="s-quick">'+q.map(function(x,i){
         return '<div class="ed"><span class="s-q"><span class="s-ic">'+svgi(QICON[i],1)+'</span><b>'+esc(x.label)+'</b></span>'+pen('Edit '+QNAME[i],'q'+i)+'</div>';
      }).join('')+'</div>'+
-     '<div class="ed s-help" style="margin-top:14px"><span class="s-ic">?</span><span><b>"How to order?" button</b><small style="word-break:break-all">'+(tv('howto')?esc(tv('howto')):'Using the Telegram link (tap the pen to set a video / guide link)')+'</small></span>'+pen('Edit "How to order?" link','t:howto')+'</div>'+
      sec('sec1')+'<div class="s-grid">'+top.map(pc).join('')+'</div>'+
      '<div style="margin:14px 0 4px"><button type="button" class="btn block" id="addProd">'+icon('plus','width:16px;height:16px')+'Add Product</button></div>'+
      sec('sec2')+'<div class="s-grid">'+uc.map(pc).join('')+'</div>'+
@@ -1070,6 +1070,17 @@ function renderPayment(main){
   })();
 }
 
+function renderHowto(main){
+  var w=box(main);
+  var t=(state.cfg.texts||[]).filter(function(x){return x.id==='howto'})[0]||{value:'',custom:false};
+  var c=card(w,'<b>"How to order?" button link</b><div class="xm">Paste a video or guide link (YouTube, Facebook, Telegram...). The "How to order?" button on every product page will open it. Leave it empty to use your Telegram link.</div><label class="lb">Link</label><input class="inp" id="hwUrl" inputmode="url" autocapitalize="off" maxlength="300" placeholder="https://...">');
+  var inp=c.querySelector('#hwUrl');inp.value=t.custom?t.value:'';
+  var sv=mini('Save link','',function(){act(sv,async function(){
+    state.cfg=await api('/api/admin/texts',{texts:{howto:inp.value.trim()}});
+    toast(inp.value.trim()?'Saved, the website is updated':'Cleared, the Telegram link is used','ok');sv.disabled=false;
+  })});
+  c.appendChild(sv);
+}
 function renderAutoTopup(main){
   var w=box(main);
   (async function(){
