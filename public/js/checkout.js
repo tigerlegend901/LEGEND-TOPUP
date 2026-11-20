@@ -7,7 +7,8 @@
   'use strict';
   if (window.FFXOrder) return;
 
-  var NAMES = { bkash: 'বিকাশ (bKash)', nagad: 'নগদ (Nagad)', rocket: 'রকেট (Rocket)' };
+  var NAMES = { bkash: 'বিকাশ (bKash)', nagad: 'নগদ (Nagad)', rocket: 'রকেট (Rocket)', upay: 'উপায় (Upay)', binance: 'Binance / USDT' };
+  var SMS_METHODS = ['bkash', 'nagad', 'rocket'];
   var payInfo = null;
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -87,12 +88,12 @@
     return api('/wallet/payment-info').then(function (d) { payInfo = d; return d; }).catch(function () { payInfo = {}; return payInfo; });
   }
 
-  // bKash / Nagad / Rocket form (shared by Instant Pay and Add Money)
+  // bKash / Nagad / Rocket / Upay / Binance form (shared by Instant Pay and Add Money)
   function payFields(fixedAmount) {
-    return '<div class="fo-methods">' + ['bkash', 'nagad', 'rocket'].map(function (k, i) {
+    return '<div class="fo-methods">' + ['bkash', 'nagad', 'rocket', 'upay', 'binance'].map(function (k, i) {
       return '<button type="button" data-m="' + k + '" class="' + (i ? '' : 'on') + '">' + NAMES[k] + '</button>';
     }).join('') + '</div>' +
-      '<div class="fo-card">এই নম্বরে Send Money করুন: <b id="foNum">—</b><button type="button" class="fo-copy" id="foCopy">Copy</button></div>' +
+      '<div class="fo-card"><span id="foInstruction">এই নম্বরে Send Money করুন:</span> <b id="foNum">—</b><button type="button" class="fo-copy" id="foCopy">Copy</button><div class="fo-muted" id="foNetwork"></div></div>' +
       (fixedAmount
         ? '<div class="fo-card">পাঠানোর পরিমাণ: <b>' + taka(fixedAmount) + '</b></div>'
         : '<label>কত টাকা যোগ করবেন (৳)<input id="foAmt" type="number" inputmode="numeric" min="1" placeholder="যেমন: 100"></label>') +
@@ -100,7 +101,12 @@
   }
   function wirePay(m) {
     var method = 'bkash';
-    function showNum() { q(m, '#foNum').textContent = (payInfo && payInfo[method]) || 'সেট করা নেই (অ্যাডমিনকে জানান)'; }
+    function showNum() {
+      var val = (payInfo && payInfo[method]) || '';
+      q(m, '#foNum').textContent = val || 'সেট করা নেই (অ্যাডমিনকে জানান)';
+      q(m, '#foInstruction').textContent = method === 'binance' ? 'এই Binance Pay ID / USDT wallet-এ পেমেন্ট করুন:' : 'এই নম্বরে Send Money করুন:';
+      q(m, '#foNetwork').textContent = method === 'binance' ? ('Network / Type: ' + ((payInfo && payInfo.binanceNetwork) || 'অ্যাডমিনের কাছ থেকে নিশ্চিত করুন') + ' — BDT থেকে USDT auto-convert হয় না; সঠিক USDT amount নিশ্চিত করুন এবং ভুল network-এ পাঠাবেন না।') : (SMS_METHODS.indexOf(method) >= 0 ? 'পেমেন্ট SMS এলে স্বয়ংক্রিয় যাচাই হতে পারে।' : 'এই পেমেন্ট অ্যাডমিন ম্যানুয়ালি যাচাই করবেন।');
+    }
     m.querySelectorAll('.fo-methods button').forEach(function (b) {
       b.onclick = function () {
         method = b.getAttribute('data-m');
@@ -109,7 +115,7 @@
       };
     });
     q(m, '#foCopy').onclick = function () {
-      var n = (payInfo && payInfo[method]) || '';
+      var n = (payInfo && payInfo[method]) || ''; 
       if (n && navigator.clipboard) navigator.clipboard.writeText(n);
       this.textContent = 'Copied';
     };
@@ -144,6 +150,7 @@
           api('/wallet/add-money', 'POST', { method: p.method, amount: p.amount, trxId: p.trxId, mode: 'instant' })
             .then(function (r) {
               if (r.approved) return r;
+              if (SMS_METHODS.indexOf(p.method) < 0) return r;
               btn.textContent = 'পেমেন্ট SMS যাচাই হচ্ছে…';
               return pollPaid('/wallet/requests/' + r.id).then(function (ok) {
                 if (ok) { r.approved = true; r.message = 'পেমেন্ট ভেরিফাই হয়েছে। টাকা ওয়ালেটে যোগ হয়েছে।'; }
@@ -182,13 +189,14 @@
       if (r.user) setWalletText(r.user.balance || 0);
       if (extra.payMethod !== 'instant' || !r.order || r.order.paid) return r;
       var btn = m && m.querySelector('button[type=submit]'); if (btn) btn.textContent = 'পেমেন্ট SMS যাচাই হচ্ছে…';
+      if (SMS_METHODS.indexOf(extra.via) < 0) return r;
       return pollPaid('/orders/' + r.order._id).then(function (ok) { if (ok) r.order.paid = true; return r; });
     }).then(function (r) {
       if (m) m.remove();
       var inst = extra.payMethod === 'instant';
       if (inst && r.order && r.order.paid) success('পেমেন্ট ভেরিফাই হয়েছে ✅', [c.name + ' — ' + taka(c.price), 'Player UID: ' + c.uid, 'স্ট্যাটাস: পেমেন্ট নিশ্চিত, ডেলিভারি প্রক্রিয়াধীন']);
       else success('অর্ডার সফল হয়েছে ✅', [c.name + ' — ' + taka(c.price), 'Player UID: ' + c.uid,
-        inst ? 'পেমেন্টের SMS এখনো আসেনি। এলে নিজে থেকেই ভেরিফাই হবে, না হলে অ্যাডমিন চেক করবে।' : 'স্ট্যাটাস: Pending (অ্যাডমিন চেক করে ডেলিভারি দেবে)']);
+        inst ? (SMS_METHODS.indexOf(extra.via) >= 0 ? 'পেমেন্টের SMS যাচাই হচ্ছে; না মিললে অ্যাডমিন চেক করবেন।' : 'পেমেন্ট রেফারেন্স জমা হয়েছে। অ্যাডমিন পেমেন্ট যাচাই করে অর্ডার সম্পন্ন করবেন।') : 'স্ট্যাটাস: Pending (অ্যাডমিন চেক করে ডেলিভারি দেবে)']);
     });
   }
 
