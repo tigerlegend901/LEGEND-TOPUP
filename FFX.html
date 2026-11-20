@@ -3847,7 +3847,8 @@ setInterval(fetchFreshAccountConfig, 15000);
         var tu = trx.toUpperCase(), tr = TRX_RULES[String(method).toLowerCase()];
         if (tr && (!tr[0].test(tu) || new Set(tu.split('')).size < 3 || (tr[1] === 'm' && !(/[A-Z]/.test(tu) && /[0-9]/.test(tu))) || (tr[1] === 'd' && !/[0-9]/.test(tu)) || /^(0123456789|1234567890|9876543210|ABCDEFGHIJ)/.test(tu))) { err.textContent = tr[2]; return; }
         trx = tu;
-        btn.disabled = true; btn.innerHTML = '<span class="fo-sp" role="status" aria-label="যাচাই হচ্ছে"></span>';
+        // Submit-এ কোনো spinner দেখাব না; request শেষ হলে ফলাফল দেখানো হবে।
+        btn.disabled = true;
         o.onSubmit({ method: method, amount: Number(amount), trxId: trx, modal: m, state: st })
           .then(null, function (ex) { if (st.cancelled) return; err.textContent = ex.message; btn.disabled = false; btn.textContent = 'ভেরিফাই'; });
       };
@@ -3898,15 +3899,14 @@ setInterval(fetchFreshAccountConfig, 15000);
                 p.state.cancelUrl = '/wallet/requests/' + r.id + '/cancel';
                 if (p.state.cancelled) { api(p.state.cancelUrl, 'POST', {}).catch(function () {}); return null; } // ইউজার এর মধ্যেই বাতিল করেছে
                 if (r.approved) return r;
-                if (SMS_METHODS.indexOf(p.method) < 0) return r;
-                return pollPaid('/wallet/requests/' + r.id, p.state).then(function (res) {
-                  var ok = res === 'paid';
-                  if (res === 'cancelled') return null;
-                  if (res === 'rejected') { r.rejected = true; return r; }
-                  if (ok) { r.approved = true; r.message = 'পেমেন্ট ভেরিফাই হয়েছে। টাকা আপনার ওয়ালেটে যোগ হয়েছে।'; }
-                  else r.message = SMS_METHODS.indexOf(p.method) >= 0 ? 'পেমেন্টের SMS এখনো আসেনি। এলে নিজে থেকেই টাকা যোগ হবে, না হলে অ্যাডমিন চেক করবেন।' : 'পেমেন্ট রেফারেন্স জমা হয়েছে। অ্যাডমিন যাচাই করে ওয়ালেটে টাকা যোগ করবেন।';
-                  return r;
-                });
+                // SMS-এর জন্য অপেক্ষা না করে সঙ্গে সঙ্গে Request submitted দেখাই।
+                // SMS webhook পরে এলে paymentVerify.js নিজে থেকেই ওয়ালেটে টাকা যোগ করবে।
+                if (SMS_METHODS.indexOf(p.method) >= 0) {
+                  r.message = 'পেমেন্টের SMS এখনো আসেনি। এলে নিজে থেকেই টাকা যোগ হবে, না হলে অ্যাডমিন চেক করবেন।';
+                } else {
+                  r.message = 'পেমেন্ট রেফারেন্স জমা হয়েছে। অ্যাডমিন যাচাই করে ওয়ালেটে টাকা যোগ করবেন।';
+                }
+                return r;
               })
               .then(function (r) {
                 if (!r) return me(); // বাতিল হয়েছে — বাতিলের স্ক্রিন আগেই দেখানো হয়েছে
