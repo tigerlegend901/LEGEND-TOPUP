@@ -65,10 +65,24 @@ const Code = def('Code', new Schema({
   createdAt: { type: Date, default: Date.now }
 }));
 
+
+// Raw payment SMS records received through the authenticated SMS webhook.
+// A transaction ID is stored once; `used` prevents one SMS from settling
+// multiple orders or wallet top-ups.
+const SmsPayment = def('SmsPayment', new Schema({
+  trxId: { type: String, unique: true, required: true, uppercase: true, trim: true },
+  amount: { type: Number, required: true, min: 0 },
+  method: { type: String, default: '' },
+  sender: { type: String, default: '' },
+  raw: { type: String, default: '' },
+  used: { type: Boolean, default: false, index: true },
+  usedFor: { type: String, default: '' }
+}, { timestamps: true }));
+
 // Admin settings (payment numbers etc.)
 const Setting = def('Setting', new Schema({
   key: { type: String, unique: true, required: true },
   value: Schema.Types.Mixed
 }));
 
-module.exports = { Wallet, Txn, UsedTrx, AddRequest, Order, Code, Setting };
+module.exports = { Wallet, Txn, UsedTrx, SmsPayment, AddRequest, Order, Code, Setting };
