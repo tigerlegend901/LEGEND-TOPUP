@@ -27,7 +27,7 @@ async function handle(c) {
     if (!METHODS.includes(via)) throw new HttpError(400, 'Choose a supported payment method');
     if (!Number.isFinite(amount) || amount < 1 || amount > 100000) throw new HttpError(400, 'Enter a valid amount');
     if (senderNumber && !/^01\d{9}$/.test(senderNumber)) throw new HttpError(400, 'Enter a valid 11-digit sender number'); // ঐচ্ছিক
-    if (!/^[A-Z0-9]{6,128}$/.test(trxId)) throw new HttpError(400, 'Enter a valid Transaction ID / payment reference');
+    { const trxErr = require('../services/trxFormat').check(via, trxId); if (trxErr) throw new HttpError(400, trxErr); }
     const pendingCount = await AddRequest.countDocuments({ customerId: cid, status: 'pending' });
     if (pendingCount >= 3) throw new HttpError(429, 'আপনার ৩টি অনুরোধ এখনো যাচাই হচ্ছে। যাচাই শেষ হলে নতুন অনুরোধ করুন।');
     if (!(await wallet.reserveTrx(trxId, 'addmoney'))) throw new HttpError(409, 'This Transaction ID was already used');
