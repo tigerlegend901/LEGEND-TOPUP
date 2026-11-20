@@ -3800,10 +3800,19 @@ setInterval(fetchFreshAccountConfig, 15000);
           title: 'টাকা যোগ করুন',
           top: '<div class="fo-muted">বর্তমান ব্যালেন্স: <b>' + taka(u.balance) + '</b></div>',
           onSubmit: function (p) {
-            return api('/wallet/add-money', 'POST', { method: p.method, amount: p.amount, senderNumber: p.senderNumber, trxId: p.trxId, mode: 'manual' })
+            return api('/wallet/add-money', 'POST', { method: p.method, amount: p.amount, senderNumber: p.senderNumber, trxId: p.trxId, mode: 'instant' })
+              .then(function (r) {
+                if (r.approved) return r;
+                var b = q(p.modal, '#foS'); if (b) b.textContent = 'পেমেন্ট SMS যাচাই হচ্ছে… (২ মিনিট পর্যন্ত)';
+                return pollPaid('/wallet/requests/' + r.id).then(function (ok) {
+                  if (ok) { r.approved = true; r.message = 'পেমেন্ট ভেরিফাই হয়েছে। টাকা আপনার ওয়ালেটে যোগ হয়েছে।'; }
+                  else r.message = 'পেমেন্টের SMS এখনো আসেনি। এলে নিজে থেকেই টাকা যোগ হবে, না হলে অ্যাডমিন চেক করে যোগ করবে।';
+                  return r;
+                });
+              })
               .then(function (r) {
                 p.modal.remove();
-                success(r.approved ? 'টাকা যোগ হয়েছে' : 'অনুরোধ পাঠানো হয়েছে', [r.message]);
+                success(r.approved ? 'টাকা যোগ হয়েছে ✅' : 'অনুরোধ পাঠানো হয়েছে', [r.message]);
                 return me();
               });
           }
@@ -3812,13 +3821,39 @@ setInterval(fetchFreshAccountConfig, 15000);
     }).catch(function (ex) { success('সমস্যা হয়েছে', [ex.message]); });
   }
 
+  // অটো ভেরিফাইয়ের অপেক্ষা: ৩ সেকেন্ড পরপর সার্ভারে দেখে, সর্বোচ্চ ~২ মিনিট। পেইড হলে true।
+  function pollPaid(path) {
+    var tries = 0;
+    return new Promise(function (resolve) {
+      function next() { if (++tries >= 40) resolve(false); else setTimeout(tick, 3000); }
+      function tick() {
+        api(path).then(function (d) {
+          if (d.paid) return resolve(true);
+          if (d.rejected) return resolve(false);
+          next();
+        }, next);
+      }
+      setTimeout(tick, 2000);
+    });
+  }
+
   function placeOrder(c, extra, m) {
     var body = { packageName: c.name, price: c.price, uid: c.uid, payMethod: extra.payMethod };
     if (extra.payMethod === 'instant') { body.via = extra.via; body.senderNumber = extra.senderNumber; body.trxId = extra.trxId; }
     return api('/orders', 'POST', body).then(function (r) {
-      if (m) m.remove();
       if (r.user) setWalletText(r.user.balance || 0);
-      success('অর্ডার সফল হয়েছে ✅', [c.name + ' — ' + taka(c.price), 'প্লেয়ার UID: ' + c.uid, 'স্ট্যাটাস: পেন্ডিং (অ্যাডমিন চেক করে ডেলিভারি দেবে)']);
+      if (extra.payMethod !== 'instant' || !r.order || r.order.paid) return r;
+      var b = m && q(m, '#foS'); if (b) b.textContent = 'পেমেন্ট SMS যাচাই হচ্ছে… (২ মিনিট পর্যন্ত)';
+      return pollPaid('/orders/' + r.order._id).then(function (ok) { if (ok) r.order.paid = true; return r; });
+    }).then(function (r) {
+      if (m) m.remove();
+      var inst = extra.payMethod === 'instant';
+      if (inst && r.order && r.order.paid) {
+        success('পেমেন্ট ভেরিফাই হয়েছে ✅', [c.name + ' — ' + taka(c.price), 'প্লেয়ার UID: ' + c.uid, 'স্ট্যাটাস: পেমেন্ট নিশ্চিত, ডেলিভারি প্রক্রিয়াধীন']);
+      } else {
+        success('অর্ডার সফল হয়েছে ✅', [c.name + ' — ' + taka(c.price), 'প্লেয়ার UID: ' + c.uid,
+          inst ? 'পেমেন্টের SMS এখনো আসেনি। এলে নিজে থেকেই ভেরিফাই হবে, না হলে অ্যাডমিন চেক করে ডেলিভারি দেবে।' : 'স্ট্যাটাস: পেন্ডিং (অ্যাডমিন চেক করে ডেলিভারি দেবে)']);
+      }
     });
   }
 
