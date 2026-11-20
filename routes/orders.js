@@ -5,7 +5,8 @@ const { settle } = require('../services/paymentVerify');
 const { publicUser } = require('../middleware/auth');
 const { notifyOrder } = require('../services/telegram');
 
-const METHODS = ['bkash', 'nagad', 'rocket'];
+const METHODS = ['bkash', 'nagad', 'rocket', 'upay', 'binance'];
+const SMS_METHODS = ['bkash', 'nagad', 'rocket'];
 
 async function handle(c) {
   const { req, res, pathname, method, user, deps, HttpError, limit, models } = c;
@@ -55,16 +56,16 @@ async function handle(c) {
     const via = String(b.via || '').toLowerCase();
     const senderNumber = String(b.senderNumber || '').trim();
     const trxId = String(b.trxId || '').trim().toUpperCase();
-    if (!METHODS.includes(via)) throw new HttpError(400, 'Choose bKash, Nagad or Rocket');
+    if (!METHODS.includes(via)) throw new HttpError(400, 'Choose a supported payment method');
     if (senderNumber && !/^01\d{9}$/.test(senderNumber)) throw new HttpError(400, 'Enter a valid 11-digit sender number'); // ঐচ্ছিক
-    if (!/^[A-Z0-9]{6,20}$/.test(trxId)) throw new HttpError(400, 'Enter a valid Transaction ID');
+    if (!/^[A-Z0-9]{6,128}$/.test(trxId)) throw new HttpError(400, 'Enter a valid Transaction ID / payment reference');
     const openCount = await Order.countDocuments({ customerId: cid, payMethod: 'instant', paid: false, status: 'Pending' });
     if (openCount >= 3) throw new HttpError(429, 'আপনার ৩টি অর্ডার এখনো যাচাই হচ্ছে। যাচাই শেষ হলে নতুন অর্ডার করুন।');
     if (!(await wallet.reserveTrx(trxId, 'order'))) throw new HttpError(409, 'This Transaction ID was already used');
     try {
       let order = await Order.create(Object.assign({}, base, { via, senderNumber, trxId, autoVerified: false, paid: false }));
       // SMS আগেই এসে থাকলে এখনই পেইড হবে; না এলে SMS আসার পর webhook নিজে অনুমোদন করবে
-      try { await settle(trxId); } catch (e) { console.error('settle', e.message); }
+      if (SMS_METHODS.includes(via)) { try { await settle(trxId); } catch (e) { console.error('settle', e.message); } }
       order = (await Order.findById(order._id)) || order;
       notifyOrder(order, user);
       deps.sendJson(res, 200, { ok: true, order, verified: !!order.paid });

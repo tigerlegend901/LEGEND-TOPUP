@@ -98,11 +98,13 @@ async function handle(c) {
   if (method === 'POST' && pathname === '/api/admin/payment') {
     const b = await deps.readJson(req, 2048);
     const val = {};
-    ['bkash', 'nagad', 'rocket'].forEach((k) => {
+    ['bkash', 'nagad', 'rocket', 'upay'].forEach((k) => {
       const v = String(b[k] == null ? '' : b[k]).trim();
-      if (!/^[0-9+\-\s]{0,20}$/.test(v)) throw new HttpError(400, k + ': নম্বর ঠিক নেই');
+      if (!/^[0-9+\-\s]{0,30}$/.test(v)) throw new HttpError(400, k + ': নম্বর ঠিক নেই');
       val[k] = v;
     });
+    val.binance = String(b.binance == null ? '' : b.binance).trim().slice(0, 200);
+    val.binanceNetwork = String(b.binanceNetwork == null ? '' : b.binanceNetwork).trim().slice(0, 60);
     await Setting.findOneAndUpdate({ key: 'payment' }, { value: val }, { upsert: true });
     return send({ ok: true, payment: await paymentInfo() }), true;
   }

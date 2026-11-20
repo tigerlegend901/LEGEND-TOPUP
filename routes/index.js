@@ -62,14 +62,14 @@ module.exports = function createApi(deps) {
 
   // Payment numbers: saved from the admin panel (MongoDB); falls back to the old PAY_* settings if never saved.
   async function paymentInfo() {
-    const env = { bkash: (process.env.PAY_BKASH || '').trim(), nagad: (process.env.PAY_NAGAD || '').trim(), rocket: (process.env.PAY_ROCKET || '').trim() };
+    const env = { bkash: (process.env.PAY_BKASH || '').trim(), nagad: (process.env.PAY_NAGAD || '').trim(), rocket: (process.env.PAY_ROCKET || '').trim(), upay: (process.env.PAY_UPAY || '').trim(), binance: (process.env.PAY_BINANCE || '').trim(), binanceNetwork: (process.env.PAY_BINANCE_NETWORK || '').trim() };
     try {
       if (!uri) return env;
       await connect();
       const d = await M.Setting.findOne({ key: 'payment' }).lean();
       const v = (d && d.value) || {};
       const out = {};
-      ['bkash', 'nagad', 'rocket'].forEach((k) => { out[k] = typeof v[k] === 'string' ? v[k] : env[k]; });
+      ['bkash', 'nagad', 'rocket', 'upay', 'binance', 'binanceNetwork'].forEach((k) => { out[k] = typeof v[k] === 'string' ? v[k] : env[k]; });
       return out;
     } catch (_) { return env; }
   }

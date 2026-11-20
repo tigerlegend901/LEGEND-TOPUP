@@ -3,7 +3,8 @@ const wallet = require('../services/wallet');
 const { settle } = require('../services/paymentVerify');
 const { publicUser } = require('../middleware/auth');
 
-const METHODS = ['bkash', 'nagad', 'rocket'];
+const METHODS = ['bkash', 'nagad', 'rocket', 'upay', 'binance'];
+const SMS_METHODS = ['bkash', 'nagad', 'rocket'];
 
 async function handle(c) {
   const { req, res, pathname, method, user, deps, HttpError, limit, models, paymentInfo } = c;
@@ -19,14 +20,14 @@ async function handle(c) {
     limit('add:' + cid, 15, 10 * 60 * 1000);
     const b = await deps.readJson(req, 8192);
     const via = String(b.method || '').toLowerCase();
-    const mode = b.mode === 'instant' ? 'instant' : 'manual';
+    const mode = b.mode === 'instant' && SMS_METHODS.includes(via) ? 'instant' : 'manual';
     const amount = Math.round(Number(b.amount) * 100) / 100;
     const senderNumber = String(b.senderNumber || '').trim();
     const trxId = String(b.trxId || '').trim().toUpperCase();
-    if (!METHODS.includes(via)) throw new HttpError(400, 'Choose bKash, Nagad or Rocket');
+    if (!METHODS.includes(via)) throw new HttpError(400, 'Choose a supported payment method');
     if (!Number.isFinite(amount) || amount < 1 || amount > 100000) throw new HttpError(400, 'Enter a valid amount');
     if (senderNumber && !/^01\d{9}$/.test(senderNumber)) throw new HttpError(400, 'Enter a valid 11-digit sender number'); // ঐচ্ছিক
-    if (!/^[A-Z0-9]{6,20}$/.test(trxId)) throw new HttpError(400, 'Enter a valid Transaction ID');
+    if (!/^[A-Z0-9]{6,128}$/.test(trxId)) throw new HttpError(400, 'Enter a valid Transaction ID / payment reference');
     const pendingCount = await AddRequest.countDocuments({ customerId: cid, status: 'pending' });
     if (pendingCount >= 3) throw new HttpError(429, 'আপনার ৩টি অনুরোধ এখনো যাচাই হচ্ছে। যাচাই শেষ হলে নতুন অনুরোধ করুন।');
     if (!(await wallet.reserveTrx(trxId, 'addmoney'))) throw new HttpError(409, 'This Transaction ID was already used');
@@ -38,11 +39,11 @@ async function handle(c) {
 
     // SMS আগেই এসে থাকলে এখনই অনুমোদন; না এলে SMS আসার পর webhook নিজে অনুমোদন করবে
     let verified = false;
-    try { verified = !!(await settle(trxId)); } catch (e) { console.error('settle', e.message); }
+    try { verified = SMS_METHODS.includes(via) && !!(await settle(trxId)); } catch (e) { console.error('settle', e.message); }
     if (verified) {
       deps.sendJson(res, 200, { ok: true, id: doc._id, approved: true, message: 'Payment verified. Money added to your wallet.' });
     } else {
-      deps.sendJson(res, 200, { ok: true, id: doc._id, approved: false, message: 'Request submitted. Your balance will be added automatically once the payment SMS is verified (or after admin approval).' });
+      deps.sendJson(res, 200, { ok: true, id: doc._id, approved: false, message: SMS_METHODS.includes(via) ? 'Request submitted. Payment SMS verification is pending, or admin can review it.' : 'Request submitted. This payment method requires manual admin verification before wallet credit.' });
     }
     return true;
   }
