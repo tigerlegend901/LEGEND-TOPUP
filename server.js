@@ -1787,6 +1787,19 @@ function handle(req, res) {
   }
 
   // ---- অ্যাডমিন অ্যাপ (PWA): আলাদা manifest, আইকন ও service worker (শুধু /admin এর জন্য) ----
+  if (pathname === '/manifest.json') {
+    const man = {
+      id: '/', name: 'TIGER LEGEND TOPUP', short_name: 'TIGER LEGEND',
+      start_url: '/', scope: '/', display: 'standalone', orientation: 'portrait',
+      background_color: '#ffffff', theme_color: '#1e63f0',
+      icons: [
+        { src: '/icon-192.png?v=2', sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: '/icon-512.png?v=2', sizes: '512x512', type: 'image/png', purpose: 'any' }
+      ]
+    };
+    res.writeHead(200, { 'Content-Type': 'application/manifest+json; charset=utf-8', 'Cache-Control': 'no-cache' });
+    return res.end(JSON.stringify(man));
+  }
   if (pathname === '/admin-manifest.json') {
     const man = {
       id: '/admin', name: ADMIN_APP_NAME, short_name: ADMIN_APP_SHORT,
