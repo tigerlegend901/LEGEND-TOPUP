@@ -58,7 +58,7 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '521998085432-q8349858u
 
 const BLOCKED_NAMES = new Set(['server.js', 'package.json', 'package-lock.json', 'admin.html']);
 // সার্ভারের ভেতরের ফোল্ডার — এগুলোর সোর্স কোড ব্রাউজারে খোলা যাবে না
-const BLOCKED_DIRS = new Set(['node_modules', 'middleware', 'routes', 'services', 'models']);
+const BLOCKED_DIRS = new Set(['node_modules', 'middleware', 'routes', 'services', 'models', 'tests']);
 
 const DEFAULT_PACKAGES = [
   { label: '200 FF LIKE- প্রতিদিন ১ আইডিতে ১বার', name: '200 FF LIKE', price: 30 },

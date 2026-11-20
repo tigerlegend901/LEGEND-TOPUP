@@ -6,17 +6,17 @@ var website_name = "TIGER LEGEND TOPUP BEST TOPUP SERVICE ";
 // =======================================================
 // TELEGRAM CHANNEL LINK
 // =======================================================
-var telegram_channel_link = "t.me/@Tiger_Legend_Bot";
+var telegram_channel_link = "t.me/Tiger_Legend_Bot";
 
 // =======================================================
 // TELEGRAM GROUP LINK
 // =======================================================
-var telegram_group_link = "t.me/@Tiger_Legend_Bot";
+var telegram_group_link = "t.me/Tiger_Legend_Bot";
 
 // =======================================================
 // YOUTUBE CHANNEL LINK
 // =======================================================
-var youtube_channel_link = "@t.me/@Tiger_Legend_Bot";
+var youtube_channel_link = "@t.me/Tiger_Legend_Bot";
 
 // =======================================================
 // NOTIFICATION TEXT
@@ -24,4 +24,4 @@ var youtube_channel_link = "@t.me/@Tiger_Legend_Bot";
 var notification_text = `সবথেকে কম দামে টপ করার জন্য সেরা ওয়েবসাইট
 ১০০% বিশ্বস্ত ও দ্রুত ডেলিভারিতে
 অর্ডার করুন নিশ্চিন্তে ♥️`;
-(function(){var s=document.createElement('script');s.src='/js/checkout.js';document.head.appendChild(s);})();
+

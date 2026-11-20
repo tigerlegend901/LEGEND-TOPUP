@@ -410,7 +410,8 @@ var SECTIONS=[
   {id:'addmoney',title:'Add Money requests',icon:'plus',render:renderAddMoney},
   {id:'users',title:'Users & balance',icon:'edit',render:renderUsers},
   {id:'codes',title:'Redeem codes',icon:'edit',render:renderCodes},
-  {id:'payment',title:'Payment numbers',icon:'edit',render:renderPayment}
+  {id:'payment',title:'Payment numbers',icon:'edit',render:renderPayment},
+  {id:'autotopup',title:'Auto Topup API',icon:'edit',render:renderAutoTopup}
 ];
 
 function openMenu(){
@@ -959,7 +960,7 @@ function renderOrders(main){
   var st='Pending',w=box(main);
   async function load(){
     w.innerHTML='';
-    chips(w,[['Pending','Pending'],['Completed','Done'],['Rejected','Rejected'],['','All']],st,function(v){st=v;load()});
+    chips(w,[['Pending','Pending'],['Completed','Done'],['Rejected','Rejected'],['Cancelled','Cancelled'],['','All']],st,function(v){st=v;load()});
     var l=card(w,'Loading...');
     try{
       var r=await api('/api/admin/orders'+(st?'?status='+st:''));l.remove();
@@ -968,12 +969,14 @@ function renderOrders(main){
         var c=card(w,'<div class="xt"><b>'+esc(o.packageName)+'</b><span>BDT '+esc(o.price)+'</span></div>'+
           '<div class="xm">Player UID: <b>'+esc(o.uid)+'</b></div><div class="xm">'+who(o.customer)+'</div>'+
           '<div class="xm">'+(o.payMethod==='wallet'?'Paid from wallet':'Instant '+esc(o.via)+' · '+esc(o.senderNumber)+' · TrxID '+esc(o.trxId))+(o.autoVerified?' (auto verified)':'')+'</div>'+
-          '<div class="xm">'+when(o.createdAt)+' · <b>'+esc(o.status)+'</b>'+(o.adminNote?' · '+esc(o.adminNote):'')+'</div>'+(o.deliveredCode?'<div class="xm">Sent to customer: '+esc(o.deliveredCode)+'</div>':''));
+          '<div class="xm">'+when(o.createdAt)+' · <b>'+esc(o.status)+'</b>'+(o.adminNote?' · '+esc(o.adminNote):'')+'</div>'+(o.deliveredCode?'<div class="xm">Sent to customer: '+esc(o.deliveredCode)+'</div>':'')+
+          (o.delivery&&o.delivery!=='none'?'<div class="xm">Auto topup: <b>'+esc(o.delivery)+'</b>'+(o.deliveryRef?' · ref '+esc(o.deliveryRef):'')+(o.deliveryError?' · '+esc(o.deliveryError):'')+'</div>':''));
         if(o.status!=='Pending')return;
         c.insertAdjacentHTML('beforeend','<input class="inp xi" placeholder="Message / code for customer (optional)">');
         var inp=c.querySelector('input'),bar=document.createElement('div');bar.className='xb';
         var ok=mini('Deliver','',function(){act(ok,async function(){await api('/api/admin/orders/'+o._id+'/complete',{code:inp.value,note:''});toast('Delivered','ok');load()})});
         var no=mini('Reject','danger',function(){if(!confirm('Reject this order?'+(o.payMethod==='wallet'?' The wallet money is refunded automatically.':'')))return;act(no,async function(){await api('/api/admin/orders/'+o._id+'/reject',{note:inp.value});toast('Rejected','ok');load()})});
+        if(o.paid&&o.delivery==='failed'){var rt=mini('Retry auto topup','',function(){if(!confirm('Check your provider first: the top-up may already have gone through. Retry now?'))return;act(rt,async function(){var r=await api('/api/admin/orders/'+o._id+'/retry',{});toast(r.ok?'Auto topup done':('Failed: '+(r.reason||'')),r.ok?'ok':'bad');load()})});bar.appendChild(rt)}
         bar.appendChild(ok);bar.appendChild(no);c.appendChild(bar);
       });
     }catch(e){l.textContent=e.message}
@@ -985,7 +988,7 @@ function renderAddMoney(main){
   var st='pending',w=box(main);
   async function load(){
     w.innerHTML='';
-    chips(w,[['pending','Pending'],['approved','Approved'],['rejected','Rejected'],['','All']],st,function(v){st=v;load()});
+    chips(w,[['pending','Pending'],['approved','Approved'],['rejected','Rejected'],['cancelled','Cancelled'],['','All']],st,function(v){st=v;load()});
     var l=card(w,'Loading...');
     try{
       var r=await api('/api/admin/addmoney'+(st?'?status='+st:''));l.remove();
@@ -1059,6 +1062,29 @@ function renderPayment(main){
       var sv=mini('Save numbers','',function(){act(sv,async function(){
         var b={};c.querySelectorAll('input').forEach(function(i){b[i.dataset.k]=i.value});
         await api('/api/admin/payment',b);toast('Saved, customers see the new numbers','ok');sv.disabled=false;
+      })});
+      c.appendChild(sv);
+    }catch(e){card(w,esc(e.message))}
+  })();
+}
+
+function renderAutoTopup(main){
+  var w=box(main);
+  (async function(){
+    try{
+      var r=await api('/api/admin/autotopup');
+      var c=card(w,'<b>Auto Topup API</b><div class="xm">After a payment is confirmed, the order is sent to your top-up API automatically. If it fails, the order stays Pending and you can Retry or deliver by hand. Only packages with an API code below are sent automatically.</div>'+
+        '<label class="lb"><input type="checkbox" id="atOn"'+(r.enabled?' checked':'')+'> Enable auto topup</label>'+
+        '<label class="lb">API URL (https://...)</label><input class="inp" id="atUrl" placeholder="https://provider.com/api/topup" value="'+esc(r.url||'')+'">'+
+        '<label class="lb">API key '+(r.hasKey?'(saved: '+esc(r.keyHint)+' — leave empty to keep)':'(e.g. API-12345678)')+'</label><input class="inp" id="atKey" type="password" autocomplete="off" placeholder="API-12345678">'+
+        '<label class="lb">How the key is sent</label><select class="inp" id="atAuth">'+r.authModes.map(function(a){return '<option'+(a===r.auth?' selected':'')+'>'+a+'</option>'}).join('')+'</select>'+
+        '<label class="lb">API package code for each package (empty = deliver by hand)</label><div id="atMap"></div>');
+      var mp=c.querySelector('#atMap');
+      r.packages.forEach(function(n){var d=document.createElement('div');d.className='xm';d.innerHTML='<div>'+esc(n)+'</div><input class="inp" data-p="'+esc(n)+'" placeholder="API code" value="'+esc((r.map||{})[n]||'')+'">';mp.appendChild(d)});
+      var sv=mini('Save','',function(){act(sv,async function(){
+        var map={};mp.querySelectorAll('input').forEach(function(i){if(i.value.trim())map[i.dataset.p]=i.value.trim()});
+        await api('/api/admin/autotopup',{enabled:c.querySelector('#atOn').checked,url:c.querySelector('#atUrl').value,key:c.querySelector('#atKey').value,auth:c.querySelector('#atAuth').value,map:map});
+        toast('Saved','ok');sv.disabled=false;c.querySelector('#atKey').value='';
       })});
       c.appendChild(sv);
     }catch(e){card(w,esc(e.message))}

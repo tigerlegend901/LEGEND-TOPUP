@@ -46,3 +46,37 @@
 ## কী কী বদলেছে
 - নতুন/বদলানো: `services/smsParse.js`, `services/smsHook.js`, `services/paymentVerify.js`, `models/index.js` (SmsPayment যোগ), `routes/orders.js`, `routes/wallet.js`, `services/telegram.js`, `FFX.html` ও `public/js/checkout.js` (অপেক্ষা-পোলিং), `tests/autopay.test.js`
 - পুরনো অটো-ভেরিফাই বাদ: আগের `verifyTrx` (যা `SmsPayment` মডেল না থাকায় আসলে চলতই না) এবং ১০ সেকেন্ডের ব্লকিং অপেক্ষা।
+
+---
+
+# নতুন: পেমেন্ট বাতিল + অটো টপআপ API
+
+## পেমেন্ট বাতিল (Payment Cancelled)
+- পেমেন্ট পেজে নতুন লাল বোতাম **"পেমেন্ট বাতিল করুন"**। ×, হোম আইকন বা বাইরে ক্লিক করলেও বাতিল ধরা হয়।
+- বাতিল করলে লাল ✕ সহ **"পেমেন্ট বাতিল হয়েছে"** স্ক্রিন দেখায়। অর্ডার/অ্যাড-মানি অনুরোধ সার্ভারে `Cancelled` হয় (অর্ডার লিস্টে "বাতিল" দেখায়) এবং TrxID মুক্ত হয়।
+- অ্যাডমিন Reject করলেও ইউজার "পেমেন্ট বাতিল হয়েছে" দেখে (আগে ভুল করে "অর্ডার সফল" দেখাত)।
+- পেমেন্ট যাচাই হয়ে গেলে আর বাতিল করা যায় না (সার্ভার আটকায়)।
+- API: `POST /api/orders/:id/cancel`, `POST /api/wallet/requests/:id/cancel`
+
+## অটো টপআপ API
+অ্যাডমিন প্যানেল → **Auto Topup API** ট্যাব:
+1. Enable টিক দিন
+2. API URL (https://...) দিন
+3. API Key বসান (যেমন `API-12345678`)
+4. প্রতিটি প্যাকেজের পাশে প্রোভাইডারের **API কোড** লিখুন (খালি থাকলে ওই প্যাকেজ হাতে ডেলিভারি হবে)
+5. Save
+
+অথবা Environment Variable: `AUTO_TOPUP_API_URL`, `AUTO_TOPUP_API_KEY`, `AUTO_TOPUP_AUTH` (bearer | header | body | query)।
+
+কীভাবে চলে: পেমেন্ট নিশ্চিত হলে (ওয়ালেট পে / SMS অটো-ভেরিফাই) সার্ভার API ডাকে → সফল হলে অর্ডার নিজে **Completed**। ব্যর্থ হলে অর্ডার **Pending** থাকে, Telegram-এ জানায়, অ্যাডমিনে **Retry auto topup** বা হাতে **Deliver** করা যায়। একই অর্ডারে দুবার টপআপ হয় না।
+
+⚠️ প্রোভাইডারের রিকোয়েস্ট/রেসপন্স ফরম্যাট আলাদা হয়। `services/autotopup.js`-এর `buildRequest()` ও `isSuccess()` প্রোভাইডারের ডকুমেন্ট অনুযায়ী মিলিয়ে নিন।
+
+## পেমেন্ট মেথড
+bKash / Nagad / Rocket → SMS অটো-ভেরিফাই। Upay / Binance (USDT) → অ্যাডমিন হাতে অ্যাপ্রুভ করেন (Admin → Add Money requests / Orders)। নম্বর/ওয়ালেট: Admin → Payment numbers। লোগো: `public/img/pay/README.txt` দেখুন।
+
+## অন্যান্য ফিক্স
+- `account.js` থেকে পুরনো `/js/checkout.js` লোড বন্ধ (ওটা নতুন চেকআউটের সাথে রেস করে পুরনো UI দেখাতে পারত); ফাইলটি মুছে দেওয়া হয়েছে।
+- পেইড অর্ডার Reject করলে (অটো-ভেরিফাইড instant সহ) টাকা ওয়ালেটে ফেরত যায়।
+- `tests/` ফোল্ডার ব্রাউজারে খোলা বন্ধ। Telegram লিংকের ভুল `@` সরানো হয়েছে।
+- টেস্ট: `npm run test:autopay` (১৯টি)
