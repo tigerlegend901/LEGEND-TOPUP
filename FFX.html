@@ -3843,6 +3843,10 @@ setInterval(fetchFreshAccountConfig, 15000);
         var btn = q(m, '#foS'), err = q(m, '#foE'); err.textContent = '';
         var trx = q(m, '#foTrx').value.trim();
         if (!trx) { err.textContent = 'ট্রানজেকশন আইডি লিখুন'; return; }
+        var TRX_RULES = { bkash: [/^[A-Z0-9]{10}$/, 'm', 'bKash TrxID ঠিক ১০ অক্ষরের হয় (ইংরেজি অক্ষর + সংখ্যা মেশানো), যেমন 9KD3XYZ12A'], nagad: [/^[A-Z0-9]{8,10}$/, 'd', 'Nagad TxnID ৮ অক্ষরের হয় (ইংরেজি অক্ষর + সংখ্যা), যেমন 71ABCDEF'], rocket: [/^[0-9]{8,12}$/, '', 'Rocket TxnID শুধু সংখ্যার হয় (৮-১২ ডিজিট), যেমন 5847201936'], upay: [/^[A-Z0-9]{8,14}$/, 'd', 'Upay TrxID ৮-১৪ অক্ষরের হয় (ইংরেজি অক্ষর + সংখ্যা)'], binance: [/^[A-Z0-9]{10,100}$/, '', 'Binance Order ID / TxID সঠিকভাবে লিখুন'] };
+        var tu = trx.toUpperCase(), tr = TRX_RULES[String(method).toLowerCase()];
+        if (tr && (!tr[0].test(tu) || new Set(tu.split('')).size < 3 || (tr[1] === 'm' && !(/[A-Z]/.test(tu) && /[0-9]/.test(tu))) || (tr[1] === 'd' && !/[0-9]/.test(tu)) || /^(0123456789|1234567890|9876543210|ABCDEFGHIJ)/.test(tu))) { err.textContent = tr[2]; return; }
+        trx = tu;
         btn.disabled = true; btn.innerHTML = '<span class="fo-sp" role="status" aria-label="যাচাই হচ্ছে"></span>';
         o.onSubmit({ method: method, amount: Number(amount), trxId: trx, modal: m, state: st })
           .then(null, function (ex) { if (st.cancelled) return; err.textContent = ex.message; btn.disabled = false; btn.textContent = 'ভেরিফাই'; });
