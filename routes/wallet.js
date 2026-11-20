@@ -1,17 +1,17 @@
 // routes/wallet.js → /api/wallet/*
 const wallet = require('../services/wallet');
-const { verifyTrx } = require('../services/paymentVerify');
+const { settle } = require('../services/paymentVerify');
 const { publicUser } = require('../middleware/auth');
 
 const METHODS = ['bkash', 'nagad', 'rocket'];
 
 async function handle(c) {
-  const { req, res, pathname, method, user, deps, HttpError, limit, models } = c;
+  const { req, res, pathname, method, user, deps, HttpError, limit, models, paymentInfo } = c;
   const { AddRequest, Txn, Code, Order } = models;
   const cid = user.id;
 
   if (method === 'GET' && pathname === '/api/wallet/payment-info') {
-    deps.sendJson(res, 200, { bkash: process.env.PAY_BKASH || '', nagad: process.env.PAY_NAGAD || '', rocket: process.env.PAY_ROCKET || '' });
+    deps.sendJson(res, 200, await paymentInfo()); // অ্যাডমিন প্যানেলে সেভ করা নম্বর (না থাকলে PAY_* env)
     return true;
   }
 
@@ -31,19 +31,27 @@ async function handle(c) {
     if (pendingCount >= 3) throw new HttpError(429, 'আপনার ৩টি অনুরোধ এখনো যাচাই হচ্ছে। যাচাই শেষ হলে নতুন অনুরোধ করুন।');
     if (!(await wallet.reserveTrx(trxId, 'addmoney'))) throw new HttpError(409, 'This Transaction ID was already used');
 
-    let doc, verified = false;
+    let doc;
     try {
-      if (mode === 'instant') { try { verified = !!(await verifyTrx({ trxId, amount, method: via, senderNumber })); } catch (e) { console.error('verifyTrx', e.message); } }
       doc = await AddRequest.create({ customerId: cid, method: via, amount, senderNumber, trxId, mode, status: 'pending' });
     } catch (e) { await wallet.releaseTrx(trxId).catch(() => {}); throw e; }
 
+    // SMS আগেই এসে থাকলে এখনই অনুমোদন; না এলে SMS আসার পর webhook নিজে অনুমোদন করবে
+    let verified = false;
+    try { verified = !!(await settle(trxId)); } catch (e) { console.error('settle', e.message); }
     if (verified) {
-      const done = await AddRequest.findOneAndUpdate({ _id: doc._id, status: 'pending' }, { status: 'approved', autoVerified: true });
-      if (done) await wallet.credit(cid, amount, 'Add money (' + via + ')', doc._id);
-      deps.sendJson(res, 200, { ok: true, approved: true, message: 'Payment verified. Money added to your wallet.' });
+      deps.sendJson(res, 200, { ok: true, id: doc._id, approved: true, message: 'Payment verified. Money added to your wallet.' });
     } else {
-      deps.sendJson(res, 200, { ok: true, approved: false, message: 'Request submitted. Your balance will be added after admin approval.' });
+      deps.sendJson(res, 200, { ok: true, id: doc._id, approved: false, message: 'Request submitted. Your balance will be added automatically once the payment SMS is verified (or after admin approval).' });
     }
+    return true;
+  }
+
+  let rm;
+  if (method === 'GET' && (rm = pathname.match(/^\/api\/wallet\/requests\/([a-f0-9]{24})$/))) {
+    const r = await AddRequest.findOne({ _id: rm[1], customerId: cid }).lean();
+    if (!r) throw new HttpError(404, 'Request not found');
+    deps.sendJson(res, 200, { id: r._id, status: r.status, paid: r.status === 'approved', rejected: r.status === 'rejected' });
     return true;
   }
 
