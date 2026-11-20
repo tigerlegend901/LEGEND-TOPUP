@@ -753,6 +753,9 @@ html,body,.pk,.po,.btn,.pay,.q,.card,.nav a,.pv-back{touch-action:manipulation}
 .tr-st{display:inline-block;padding:5px 12px;border-radius:99px;font-size:12.5px;font-weight:700;background:#e3f9ec;color:#067647}
 .tr-st.pending{background:#fff4dc;color:#b45309}
 .tr-st.cancelled{background:#fee4e2;color:#b42318}
+.tr-tb td.pos{color:#067647}
+.tr-tb td.neg{color:#b42318}
+.or-row.x span{margin-left:30px}
 .tr-empty{padding:60px 20px;text-align:center;color:var(--mu);font-size:13.5px}
 
 /* ===== MY ACCOUNT (PROFILE) PAGE ===== */
@@ -1645,25 +1648,25 @@ html,body,.pk,.po,.btn,.pay,.q,.card,.nav a,.pv-back{touch-action:manipulation}
   <div class="ct-sec">যোগাযোগের মাধ্যম</div>
   <div class="ct-list">
     <div class="ct-card ct-info" style="--c1:#25d366;--c2:#128c7e">
-      <a class="ct-main" href="https://wa.me/8801354201872" target="_blank" rel="noopener">
+      <a class="ct-main" data-ct="wa-link" href="https://wa.me/8801354201872" target="_blank" rel="noopener">
         <span class="ct-ic"><svg class="i" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.6-5.4A8.4 8.4 0 1 1 21 11.5z"/><path d="M9.2 8.6c.2 2.2 2.8 4.9 5.2 5.4l1.1-1.2-1.9-1-.8.6c-.9-.4-1.6-1.2-2-2l.6-.8-1-1.9z"/></svg></span>
-        <span class="ct-tx"><b>WhatsApp</b><small>01354201872</small><small>WhatsApp-এ মেসেজ দিন</small></span>
+        <span class="ct-tx"><b>WhatsApp</b><small data-ct="wa-text">01354201872</small><small>WhatsApp-এ মেসেজ দিন</small></span>
       </a>
-      <button class="ct-cp" type="button" data-copy="01354201872">কপি</button>
+      <button class="ct-cp" type="button" data-ct="wa-copy" data-copy="01354201872">কপি</button>
     </div>
     <div class="ct-card ct-info" style="--c1:#229ed9;--c2:#0b78b8">
-      <a class="ct-main" href="https://t.me/Ronimalik22" target="_blank" rel="noopener">
+      <a class="ct-main" data-ct="tg-link" href="https://t.me/Ronimalik22" target="_blank" rel="noopener">
         <span class="ct-ic"><svg class="f"><use href="#tg"/></svg></span>
-        <span class="ct-tx"><b>Telegram</b><small>@Ronimalik22</small><small>01923493618</small></span>
+        <span class="ct-tx"><b>Telegram</b><small data-ct="tg-user">@Ronimalik22</small><small data-ct="tg-num">01923493618</small></span>
       </a>
-      <button class="ct-cp" type="button" data-copy="01923493618">কপি</button>
+      <button class="ct-cp" type="button" data-ct="tg-copy" data-copy="01923493618">কপি</button>
     </div>
     <div class="ct-card ct-info" style="--c1:#ea4335;--c2:#b91c1c">
-      <a class="ct-main" href="mailto:rm8193415@gmail.com">
+      <a class="ct-main" data-ct="mail-link" href="mailto:rm8193415@gmail.com">
         <span class="ct-ic"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
-        <span class="ct-tx"><b>ইমেইল</b><small>rm8193415@gmail.com</small><small>ইমেইল পাঠান</small></span>
+        <span class="ct-tx"><b>ইমেইল</b><small data-ct="mail-text">rm8193415@gmail.com</small><small>ইমেইল পাঠান</small></span>
       </a>
-      <button class="ct-cp" type="button" data-copy="rm8193415@gmail.com">কপি</button>
+      <button class="ct-cp" type="button" data-ct="mail-copy" data-copy="rm8193415@gmail.com">কপি</button>
     </div>
   </div>
   <div class="ct-lang"><div class="ffx-langrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg><select class="ffx-lang" aria-label="Language"><option value="bn">বাংলা</option><option value="en">English</option></select></div></div>
@@ -3309,16 +3312,36 @@ setInterval(fetchFreshAccountConfig, 15000);
       var st=String(t.status||'Completed'), cls=/pend|process/i.test(st)?'pending':(/cancel|fail|reject/i.test(st)?'cancelled':'');
       var amt=Number(t.amount||0); if(!cls) sum+=amt;
       var tr=document.createElement('tr');
-      tr.innerHTML='<td>'+esc(t.number)+'</td><td>৳'+amt+'</td><td><span class="tr-st '+cls+'">'+esc(st)+'</span></td>';
+      tr.innerHTML='<td>'+esc(t.number)+'</td><td class="'+(amt<0?'neg':'pos')+'">'+(amt<0?'-':'+')+'৳'+Math.abs(amt)+'</td><td><span class="tr-st '+cls+'">'+esc(st)+'</span></td>';
       body.appendChild(tr);
     });
     total.textContent='৳'+sum;
   };
   window.renderTransactions([]);
 
+  // ---- আসল ডাটা: /api/wallet/transactions (ওয়ালেটের সব জমা/খরচ) + /api/wallet/requests (পেন্ডিং/বাতিল টাকা-যোগ) ----
+  function getJson(u){ return fetch(u,{credentials:'same-origin',cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}); }
+  function loadTx(){
+    if(!(window.FFX_AUTH && window.FFX_AUTH.loggedIn)){ window.renderTransactions([]); return; }
+    Promise.all([getJson('/api/wallet/transactions'),getJson('/api/wallet/requests')]).then(function(r){
+      var rows=[];
+      ((r[0]&&r[0].transactions)||[]).forEach(function(t){
+        rows.push({ts:new Date(t.createdAt).getTime()||0, number:String(t.title||(t.type==='credit'?'Add Money':'Payment')), amount:(t.type==='debit'?-1:1)*Number(t.amount||0), status:'Completed'});
+      });
+      ((r[1]&&r[1].requests)||[]).forEach(function(q){
+        if(q.status==='approved') return; // এগুলোর জমা-এন্ট্রি উপরে আছেই
+        rows.push({ts:new Date(q.createdAt).getTime()||0, number:String(q.senderNumber||q.trxId||'Add Money'), amount:Number(q.amount||0), status:q.status==='pending'?'Pending':(q.status==='cancelled'?'Cancelled':'Rejected')});
+      });
+      rows.sort(function(a,b){return b.ts-a.ts;});
+      window.renderTransactions(rows);
+    });
+  }
+  window.loadTransactions=loadTx;
+
   function sync(){
     var navLinks=[].slice.call(document.querySelectorAll('nav.nav a'));
     if(location.hash==='#my-transaction'){
+      loadTx();
       panel.classList.remove('show'); panel.setAttribute('aria-hidden','true'); document.body.style.overflow='';
       setTimeout(function(){ navLinks.forEach(function(n){ n.classList.remove('on'); }); },0);
     }
@@ -3336,7 +3359,33 @@ setInterval(fetchFreshAccountConfig, 15000);
 // ==========================================
 (function(){
   var panel=document.getElementById('accPanel');
+  // ╔══════════════════════════════════════════════════════════╗
+  // ║  CONTACT DETAILS — নতুন নম্বর/ইউজারনেম/ইমেইল শুধু এখানে বদলান  ║
+  // ╚══════════════════════════════════════════════════════════╝
+  var CONTACT={
+    whatsapp:'01354201872',        // WhatsApp নম্বর (০১XXXXXXXXX)
+    telegramUser:'Ronimalik22',    // Telegram ইউজারনেম (@ ছাড়া)
+    telegramNumber:'01923493618',  // Telegram এর সাথে দেখানো নম্বর (না চাইলে ফাঁকা '')
+    email:'rm8193415@gmail.com'    // ইমেইল
+  };
+  function applyContact(){
+    var q=function(k){return document.querySelector('#ctView [data-ct="'+k+'"]');};
+    var wa=String(CONTACT.whatsapp||'').replace(/\D/g,''), waIntl=wa.replace(/^0/,'880').replace(/^(?!880)/,'880');
+    var tg=String(CONTACT.telegramUser||'').replace(/^@/,''), tn=String(CONTACT.telegramNumber||''), em=String(CONTACT.email||'');
+    if(q('wa-link')) q('wa-link').href='https://wa.me/'+waIntl;
+    if(q('wa-text')) q('wa-text').textContent=CONTACT.whatsapp;
+    if(q('wa-copy')) q('wa-copy').setAttribute('data-copy',CONTACT.whatsapp);
+    if(q('tg-link')) q('tg-link').href='https://t.me/'+tg;
+    if(q('tg-user')) q('tg-user').textContent='@'+tg;
+    if(q('tg-num')){ q('tg-num').textContent=tn; q('tg-num').style.display=tn?'':'none'; }
+    if(q('tg-copy')) q('tg-copy').setAttribute('data-copy',tn||('@'+tg));
+    if(q('mail-link')) q('mail-link').href='mailto:'+em;
+    if(q('mail-text')) q('mail-text').textContent=em;
+    if(q('mail-copy')) q('mail-copy').setAttribute('data-copy',em);
+  }
+  applyContact();
   function mark(){
+    applyContact();
     if(typeof window.syncAccountLinks==='function') window.syncAccountLinks();
     document.querySelectorAll('#ctView .ct-card:not(.ct-info)').forEach(function(a){
       var h=a.getAttribute('href');
@@ -4134,7 +4183,7 @@ setInterval(fetchFreshAccountConfig, 15000);
   }
   // ---- আমার অর্ডার: কার্ড + ফিল্টার ----
   var allOrders = [];
-  function oid(o) { return 'ORD-' + String(o.id || o._id || '').slice(-6).toUpperCase(); }
+  function oid(o) { return String(o._id || o.id || '').slice(-7).toUpperCase(); }
   function fshort(v) {
     var d = new Date(v); if (!v || isNaN(d)) return '';
     var m = {};
@@ -4166,21 +4215,36 @@ setInterval(fetchFreshAccountConfig, 15000);
     });
     list.textContent = '';
     if (empty) empty.style.display = rows.length ? 'none' : 'flex';
+    var ICN = {
+      box: '<svg class="i"><use href="#bag"/></svg>', cal: '<svg class="i"><use href="#clock"/></svg>', ref: '<svg class="i"><use href="#refresh"/></svg>',
+      card: '<svg class="i"><use href="#card"/></svg>', user: '<svg class="i"><use href="#user"/></svg>', ok: '<svg class="i"><use href="#chk"/></svg>'
+    };
+    function sp(d) { var t = String(d || '').split(' '); return { d: t[0] || '', t: t.slice(1).join(' ') }; }
+    function tx(h) { return String(h == null ? '' : h).replace(/[&<>"']/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]; }); }
     rows.forEach(function (o) {
-      var s = stInfo(o.status), c = el('article', 'mo-c');
-      var r1 = el('div', 'mo-r1'); r1.appendChild(el('b', 'mo-pk', o.packageName || '')); r1.appendChild(el('span', 'mo-st ' + s.c, s.t));
-      var r2 = el('div', 'mo-r2'); r2.appendChild(el('span', 'mo-meta', oid(o) + ' · ' + fshort(o.createdAt))); r2.appendChild(el('b', 'mo-pr', fmt(o.price) + ' TK'));
-      var det = el('div', 'mo-det'); det.hidden = true;
-      function row(k, v) { if (v === '' || v == null) return; var d = el('div', 'mo-dr'); d.appendChild(el('span', '', k)); d.appendChild(el('b', '', v)); det.appendChild(d); }
-      row('Player ID', o.uid);
-      row('পেমেন্ট', o.payMethod === 'wallet' ? 'ওয়ালেট' : 'ইনস্ট্যান্ট' + (o.via ? ' (' + o.via + ')' : ''));
-      row('TrxID', o.trxId);
-      row('কোড', o.deliveredCode);
-      row('নোট', o.adminNote);
-      row('আপডেট', fshort(o.updatedAt));
-      var bt = el('button', 'mo-dt', 'বিস্তারিত দেখুন'); bt.type = 'button';
-      bt.onclick = function () { det.hidden = !det.hidden; bt.textContent = det.hidden ? 'বিস্তারিত দেখুন' : 'বন্ধ করুন'; };
-      c.appendChild(r1); c.appendChild(r2); c.appendChild(bt); c.appendChild(det);
+      var s = stInfo(o.status), cls = s.c === 'pend' ? 'pending' : (s.c === 'bad' ? 'cancelled' : '');
+      var stEn = s.c === 'ok' ? 'Completed' : (s.c === 'bad' ? (/cancel/i.test(o.status) ? 'Cancelled' : 'Rejected') : 'Pending');
+      var a = sp(fd(o.createdAt)), u = sp(fd(o.updatedAt || o.createdAt));
+      var c = el('article', 'or-card');
+      var extra = '';
+      function xr(k, v) { if (v === '' || v == null) return; extra += '<div class="or-row x"><span>' + tx(k) + '</span><b>' + tx(v) + '</b></div>'; }
+      xr('Payment', o.payMethod === 'wallet' ? 'Wallet' : 'Instant' + (o.via ? ' (' + o.via + ')' : ''));
+      xr('TrxID', o.trxId);
+      xr('Code', o.deliveredCode);
+      xr('Note', o.adminNote);
+      c.innerHTML =
+        '<div class="or-hd"><span class="or-ico">' + ICN.box + '</span><div class="or-id">Order #' + tx(String(o._id || o.id || '').slice(-7).toUpperCase()) + '</div>' +
+        '<span class="or-st ' + cls + '">' + (cls ? '' : ICN.ok) + stEn + '</span></div>' +
+        '<div class="or-dates">' +
+          '<div class="or-dt"><span class="di">' + ICN.cal + '</span><div><small>Order Date</small><b>' + tx(a.d) + '</b><span>' + tx(a.t) + '</span></div></div>' +
+          '<div class="or-dt"><span class="di">' + ICN.ref + '</span><div><small>Updated</small><b>' + tx(u.d) + '</b><span>' + tx(u.t) + '</span></div></div>' +
+        '</div>' +
+        '<div class="or-rows">' +
+          '<div class="or-row">' + ICN.box + '<span>Package</span><b>' + tx(o.packageName) + '</b></div>' +
+          '<div class="or-row">' + ICN.card + '<span>Total Price</span><b>৳' + (Number(o.price) || 0).toFixed(2) + '</b></div>' +
+          '<div class="or-row">' + ICN.user + '<span>Player ID</span><b>' + tx(o.uid) + '</b></div>' +
+          extra +
+        '</div>';
       list.appendChild(c);
     });
   }
