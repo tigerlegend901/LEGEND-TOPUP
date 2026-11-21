@@ -3740,6 +3740,7 @@ setInterval(fetchFreshAccountConfig, 15000);
     '.fo-light input{background:#fff;border:1px solid #cfd9ec;color:#1b2a4a}',
     '.fo-light input:focus{border-color:#0a52bd}',
     '.fo-bar{background:#0a52bd;color:#fff;text-align:center;padding:10px;border-radius:8px;margin:12px 0 10px;font-weight:600}',
+    '.fo-cat{margin:16px 2px 8px;font-size:13px;font-weight:800;letter-spacing:.8px;color:#6b7a99;text-transform:uppercase}',
     '.fo-methods{display:grid;grid-template-columns:1fr 1fr;gap:10px}',
     '.fo-methods button{display:flex;align-items:center;justify-content:center;height:64px;padding:6px;background:#fff;border:2px solid #e3e9f5;border-radius:10px;cursor:pointer}',
     '.fo-methods button.on{border-color:#0a52bd;box-shadow:0 0 0 3px rgba(10,82,189,.18)}',
@@ -3882,9 +3883,11 @@ setInterval(fetchFreshAccountConfig, 15000);
         '<div class="fo-av"><img src="' + esc(siteLogo()) + '" alt=""></div><div class="fo-sn">' + esc(siteName()) + '</div>' +
         '<h3>' + o.title + '</h3>' + (o.top || '') +
         '<div class="fo-bar">পেমেন্ট মেথড</div>' +
-        '<div class="fo-methods">' + ['bkash', 'nagad', 'rocket', 'upay', 'binance'].map(function (k, i) {
-          return '<button type="button" data-m="' + k + '" class="' + (i ? '' : 'on') + '" title="' + NAMES[k] + '">' + logo(k) + '</button>';
-        }).join('') + '</div>' +
+        [['MOBILE BANKING', ['bkash', 'nagad', 'rocket', 'upay']], ['CRYPTO CURRENCY', ['binance']]].map(function (g) {
+          return '<div class="fo-cat">' + g[0] + '</div><div class="fo-methods">' + g[1].map(function (k) {
+            return '<button type="button" data-m="' + k + '" class="' + (k === 'bkash' ? 'on' : '') + '" title="' + NAMES[k] + '">' + logo(k) + '</button>';
+          }).join('') + '</div>';
+        }).join('') +
         (o.fixed
           ? '<div class="fo-amtbox">টাকার পরিমাণ: <b>' + taka(o.fixed) + '</b></div>'
           : '<label>কত টাকা যোগ করবেন (৳)<input id="foAmt" type="number" inputmode="numeric" min="1" placeholder="যেমন: 100"></label>') +
