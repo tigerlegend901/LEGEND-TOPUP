@@ -149,14 +149,44 @@
           "price": 23
         },
         {
-          "label": "Package 2",
-          "name": "Package 2",
-          "price": 20
+          "label": "50 DIAMOND CODE",
+          "name": "50 DIAMOND CODE",
+          "price": 35
         },
         {
-          "label": "Package 3",
-          "name": "Package 3",
-          "price": 30
+          "label": "115 DIAMOND CODE",
+          "name": "115 DIAMOND CODE",
+          "price": 80
+        },
+        {
+          "label": "240 DIAMOND CODE",
+          "name": "240 DIAMOND CODE",
+          "price": 160
+        },
+        {
+          "label": "610 DIAMOND CODE",
+          "name": "610 DIAMOND CODE",
+          "price": 390
+        },
+        {
+          "label": "1240 DIAMOND CODE",
+          "name": "1240 DIAMOND CODE",
+          "price": 790
+        },
+        {
+          "label": "2530 DIAMOND CODE",
+          "name": "2530 DIAMOND CODE",
+          "price": 1590
+        },
+        {
+          "label": "WEEKLY CODE",
+          "name": "WEEKLY CODE",
+          "price": 158
+        },
+        {
+          "label": "MONTHLY CODE",
+          "name": "TIGER",
+          "price": 790
         }
       ]
     }
